@@ -17,8 +17,9 @@
     Show what would happen without making any changes.
 
 .NOTES
-    Requires Windows Developer Mode enabled (Settings > Privacy & Security >
-    For developers > Developer Mode). No admin rights needed.
+    Requires either Windows Developer Mode enabled (Settings > Privacy & Security >
+    For developers > Developer Mode) OR running from an elevated PowerShell.
+    The script pre-checks this and exits with clear guidance if neither is available.
 
     Idempotent: rerun safely after pulling new agents/skills.
 #>
@@ -54,6 +55,53 @@ if (-not (Test-Path $repoAgents)) {
 if (-not (Test-Path $repoSkills)) {
     throw "Missing $repoSkills. Are you running this from a plantsim-agent clone?"
 }
+
+# ---------- Pre-check: can this session create symlinks? ----------
+# Windows requires either Developer Mode enabled OR an elevated (admin) shell.
+function Test-CanCreateSymlinks {
+    # Admin?
+    try {
+        $current = [Security.Principal.WindowsIdentity]::GetCurrent()
+        $principal = New-Object Security.Principal.WindowsPrincipal($current)
+        if ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+            return @{ Ok = $true; Reason = 'admin' }
+        }
+    } catch { }
+
+    # Developer Mode enabled?
+    $key = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock'
+    try {
+        $val = Get-ItemProperty -Path $key -Name 'AllowDevelopmentWithoutDevLicense' -ErrorAction Stop
+        if ($val.AllowDevelopmentWithoutDevLicense -eq 1) {
+            return @{ Ok = $true; Reason = 'devmode' }
+        }
+    } catch { }
+
+    return @{ Ok = $false; Reason = 'none' }
+}
+
+$symlinkCheck = Test-CanCreateSymlinks
+if (-not $symlinkCheck.Ok) {
+    Write-Host ""
+    Write-Host "============================================================" -ForegroundColor Red
+    Write-Host " Cannot create symbolic links in this session." -ForegroundColor Red
+    Write-Host "============================================================" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Windows requires ONE of the following to create symlinks:"
+    Write-Host ""
+    Write-Host "  Option A (recommended) : Enable Developer Mode" -ForegroundColor Cyan
+    Write-Host "    Settings -> Privacy & Security -> For developers -> Developer Mode: On"
+    Write-Host "    (No admin needed; persists across sessions.)"
+    Write-Host ""
+    Write-Host "    Or via PowerShell as admin (one-time):"
+    Write-Host "      reg add ""HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"" /t REG_DWORD /f /v AllowDevelopmentWithoutDevLicense /d 1" -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  Option B : Run this script from an elevated PowerShell" -ForegroundColor Cyan
+    Write-Host "    Right-click PowerShell -> Run as administrator, then rerun install.ps1"
+    Write-Host ""
+    throw "Symlink creation not permitted. See instructions above."
+}
+Write-Host "Symlink permission: OK ($($symlinkCheck.Reason))" -ForegroundColor DarkGray
 
 # Ensure the two destination dirs exist (real dirs, not symlinks).
 foreach ($dir in @($targetAgents, $targetSkills)) {
