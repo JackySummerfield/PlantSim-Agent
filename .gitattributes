@@ -1,0 +1,33 @@
+# Default: text files normalised on commit, LF in repo, native checkout
+* text=auto
+
+# Source code — always LF in repo (Python tooling expects this)
+*.py    text eol=lf
+*.toml  text eol=lf
+*.md    text eol=lf
+*.json  text eol=lf
+*.jsonc text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.sh    text eol=lf
+*.cfg   text eol=lf
+*.ini   text eol=lf
+
+# Windows-only scripts keep CRLF
+*.ps1   text eol=crlf
+*.psm1  text eol=crlf
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+
+# SimTalk snippets (custom extension; treat as text, LF)
+*.simtalk text eol=lf
+
+# Binary files
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.pdf   binary
+*.db    binary
+*.sqlite binary

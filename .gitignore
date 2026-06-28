@@ -1,0 +1,115 @@
+# ============================================================
+# plantsim-agent .gitignore
+# ============================================================
+# Notes on scope:
+#   This repo lives inside `pts_ai/plantsim-agent/`.
+#   The sibling folders `pts_ai/knowledge_base/` (Siemens Help,
+#   copyrighted) and `pts_ai/nezha/` (deprecated dify project)
+#   are physically OUTSIDE this git repo and therefore are NOT
+#   tracked. No ignore rules are needed for them.
+# ============================================================
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.env
+
+# pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# mypy / ruff / pyright
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.ruff_cache/
+.pyright/
+
+# ---------- Databases / index artefacts ----------
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Local KB caches (built by user from their own PTS Help)
+.plantsim-agent/
+local_kb/
+indices/
+
+# ---------- OneDrive / Windows ----------
+desktop.ini
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+$RECYCLE.BIN/
+*.lnk
+
+# ---------- macOS / Linux ----------
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ---------- Editors ----------
+.vscode/
+!.vscode/settings.json.example
+!.vscode/extensions.json.example
+.idea/
+*.swp
+*.swo
+*~
+
+# ---------- Node (in case any tooling added later) ----------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ---------- Local secrets / config overrides ----------
+*.local.json
+*.local.yaml
+*.local.toml
+.env.local
+.env.*.local
+
+# ---------- Misc ----------
+*.log
+*.bak
+*.tmp
