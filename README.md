@@ -16,20 +16,22 @@ Bring AI assistance into the closed Plant Simulation ecosystem — knowledge-bas
 
 ## Table of Contents
 
-- [About The Project](#about-the-project)
-- [Why](#why)
-- [Features](#features)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Building Your Local Knowledge Base](#building-your-local-knowledge-base)
-- [Usage](#usage)
-- [Architecture Overview](#architecture-overview)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
-- [Trademark Notice](#trademark-notice)
+- [PlantSim-Agent](#plantsim-agent)
+  - [Table of Contents](#table-of-contents)
+  - [About The Project](#about-the-project)
+  - [Why](#why)
+  - [Features](#features)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+    - [Building Your Local Knowledge Base](#building-your-local-knowledge-base)
+  - [Usage](#usage)
+  - [Architecture Overview](#architecture-overview)
+  - [Roadmap](#roadmap)
+  - [Contributing](#contributing)
+  - [License](#license)
+  - [Acknowledgments](#acknowledgments)
+  - [Trademark Notice](#trademark-notice)
 
 ---
 
@@ -72,16 +74,40 @@ All three flows are gated by a lightweight `citation-reviewer` subagent that re-
 
 ### Installation
 
-Detailed steps will be documented in [`docs/installation.md`](./docs/installation.md) once Phase 4 lands. Outline:
+1. **Enable Windows Developer Mode** (one-time, no admin needed):
+   `Settings` → `Privacy & Security` → `For developers` → `Developer Mode: On`. This lets non-admin users create symbolic links.
 
-1. Clone this repository
-2. Run `scripts/install.ps1` (Windows) or `scripts/install.sh` (macOS / Linux) — installs agents & skills into `~/.copilot/`
-3. Register the MCP server in your Copilot `mcp.json`
-4. Reload VS Code
+2. **Clone into the recommended location.** Any path works, but `~/.copilot/plantsim-agent/` keeps everything Copilot-related under one home:
+
+   ```powershell
+   git clone https://github.com/JackySummerfield/plantsim-agent.git $HOME/.copilot/plantsim-agent
+   cd $HOME/.copilot/plantsim-agent
+   ```
+
+   > ⚠️ **Do not clone into a OneDrive / Dropbox / iCloud / Google Drive folder.** Cloud sync corrupts `.git/objects/`. Your remote is GitHub — that is your only sync.
+
+3. **Run the installer** (creates symlinks under `~/.copilot/agents/` and `~/.copilot/skills/` so VS Code Copilot picks them up):
+
+   ```powershell
+   .\scripts\install.ps1
+   ```
+
+   The installer is idempotent — rerun it any time you `git pull` new agents or skills. Use `.\scripts\uninstall.ps1` to remove just the symlinks (the repo itself is untouched).
+
+4. **Register the MCP server in your Copilot `mcp.json`** — instructions will land with Phase 2 ([`docs/roadmap.md`](./docs/roadmap.md)).
+
+5. **Reload VS Code** (`Ctrl+Shift+P` → `Developer: Reload Window`). The `PlantSim-Agent` agent should appear in the agent picker.
 
 ### Building Your Local Knowledge Base
 
-For full Help retrieval you need to build a local index from your own copy of the Plant Simulation Help. See [`docs/kb-build-guide.md`](./docs/kb-build-guide.md) for the step-by-step procedure.
+The repository ships with two knowledge-base directories side by side, with very different visibility:
+
+| Folder | Tracked in git? | Contents |
+|---|---|---|
+| [`kb_minimal/`](./kb_minimal/) | ✅ yes | Self-authored sample KB: SimTalk syntax cheat sheet, API index of public method names, modelling-standards template. Ships with the repo so anyone can evaluate the agent immediately. **Contains no Siemens content.** |
+| [`kb_local/`](./kb_local/) | ❌ no — fully gitignored | **Your private KB.** Drop markdown converted from your licensed Plant Simulation Help, plus any company-internal modelling standards, project templates, or notes. The MCP server indexes both folders together but `kb_local/` never leaves your machine. |
+
+For the full Help-to-markdown conversion workflow, see [`docs/kb-build-guide.md`](./docs/kb-build-guide.md).
 
 ## Usage
 

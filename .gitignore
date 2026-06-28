@@ -1,12 +1,10 @@
 # ============================================================
 # plantsim-agent .gitignore
 # ============================================================
-# Notes on scope:
-#   This repo lives inside `pts_ai/plantsim-agent/`.
-#   The sibling folders `pts_ai/knowledge_base/` (Siemens Help,
-#   copyrighted) and `pts_ai/nezha/` (deprecated dify project)
-#   are physically OUTSIDE this git repo and therefore are NOT
-#   tracked. No ignore rules are needed for them.
+# This repo lives at `~/.copilot/plantsim-agent/`.
+# Knowledge-base content built locally from copyrighted PTS Help
+# or company-internal material lives in `kb_local/` and MUST NOT
+# be pushed. See `kb_local/README.md` for the layout.
 # ============================================================
 
 # ---------- Python ----------
@@ -68,9 +66,15 @@ dmypy.json
 *.sqlite3
 *.db-journal
 
-# Local KB caches (built by user from their own PTS Help)
+# ---------- User-built knowledge base (PRIVATE) ----------
+# Everything under kb_local/ is ignored EXCEPT the README and .gitkeep
+# so contributors know the folder exists and what goes there.
+kb_local/*
+!kb_local/README.md
+!kb_local/.gitkeep
+
+# Other local KB / index caches
 .plantsim-agent/
-local_kb/
 indices/
 
 # ---------- OneDrive / Windows ----------
