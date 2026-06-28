@@ -26,7 +26,7 @@ Deliver an open-source GitHub Copilot agent that gives Plant Simulation develope
 | W2 | **SimTalk code authoring & review** | Generate, refactor, debug, and review snippets — without hallucinated APIs |
 | W3 | **`.psfm` project analysis** | Understand and navigate an existing model without opening Plant Simulation |
 
-Trustworthiness is non-negotiable: **every answer must carry a verifiable citation**. The agent rejects its own output when citations are missing.
+Trustworthiness is non-negotiable: **every answer must carry a verifiable citation** — Help section for W1, API source row for W2, project file/line for W3. The agent rejects its own output when citations are missing.
 
 ## 3. Non-Goals
 
@@ -69,7 +69,7 @@ Trustworthiness is non-negotiable: **every answer must carry a verifiable citati
 - W1 KB Q&A backed by user-built FTS5 index of their own PTS Help
 - W2 SimTalk code authoring, review, debugging — read-only on user files
 - W3 `.psfm` read-only queries: `find_method`, `find_callers`, `search_code`, `get_object_graph`
-- Citation reviewer (lightweight, format-anchor-first)
+- Citation reviewer (lightweight, format-anchor-first) — runs on **all three workflows** with workflow-specific anchors (W1: `**Sources:**`; W2: `**API Evidence Table**`; W3: `**File References:**`)
 - Installation scripts (Windows + POSIX)
 - Self-authored sample KB (`kb_minimal/`) so the agent is usable without a full Help build
 

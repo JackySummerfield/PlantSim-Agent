@@ -30,7 +30,7 @@ This document describes **how** PlantSim-Agent is built. For **what** it does an
 │   │                            ▼                                      │  │
 │   │                  ┌──────────────────────┐                         │  │
 │   │                  │ citation-reviewer    │   ← subagent            │  │
-│   │                  │   .agent.md          │   (W1, W2 only)         │  │
+│   │                  │   .agent.md          │   (W1, W2, W3)          │  │
 │   │                  │ tools: read          │                         │  │
 │   │                  └──────────────────────┘                         │  │
 │   │                                                                   │  │
@@ -75,28 +75,35 @@ This document describes **how** PlantSim-Agent is built. For **what** it does an
   1. Identify intent.
   2. Load the matching skill (`plantsim-kb-qa`, `plantsim-code-author`, or `plantsim-project-analyst`).
   3. Use MCP tools per the skill's procedure.
-  4. Emit a response that includes citation anchors (`**Sources:**` for W1, `**API Evidence Table**` for W2).
-  5. For W1 and W2, invoke `citation-reviewer` subagent on the response. If it returns `missing_citations`, re-generate.
+  4. Emit a response that includes citation anchors:
+     - W1 → `**Sources:**` (Help markdown path + section)
+     - W2 → `**API Evidence Table**` (every non-syntax symbol → source)
+     - W3 → `**File References:**` (project file path + line excerpt); from v0.2 write-back also requires `**API Evidence Table**` for any newly authored SimTalk
+  5. Invoke `citation-reviewer` subagent on every response. If it returns `missing_citations`, re-generate.
 
 ### 2.2 Citation reviewer — `citation-reviewer.agent.md`
 
-- **Role:** lightweight gate that ensures W1 / W2 responses carry verifiable source citations.
+- **Role:** lightweight gate that ensures every workflow response carries verifiable source citations.
 - **Tools:** `[read]` only. Minimal surface area.
 - **`user-invocable: false`** — never appears in the agent picker; only callable as a subagent.
 - **Algorithm (v0.1):**
-  1. Receive the response body as input.
-  2. Run a **regex-level check** for the required anchor (`**Sources:**` for W1, a `| Symbol | Kind | Source |` table for W2).
+  1. Receive `{workflow: W1|W2|W3, body: str}` as input.
+  2. Run a **regex-level check** for the workflow's required anchor:
+     - W1 → `**Sources:**` followed by ≥ 1 bullet pointing to a path under the configured KB root
+     - W2 → a `| Symbol | Kind | Source |` table with ≥ 1 row and no empty `Source` cells
+     - W3 → `**File References:**` followed by ≥ 1 entry of form `<path>:<line>` (or `<path> §<section>`) under a `.psfm` root; for v0.2+ write-back, additionally require the W2 anchor
   3. If anchor missing → output `{status: "missing_citations", advice: "..."}` (no LLM reasoning needed).
   4. If anchor present but suspicious (citations look like "common knowledge", "obvious", or are empty) → fall back to LLM judgement.
-- **Why lightweight:** keeps latency low and reduces false positives. Reviewer is run on every W1/W2 response, so it must be fast.
+- **Why lightweight:** keeps latency low and reduces false positives. Reviewer runs on every response, so it must be fast.
+- **Why W3 is also reviewed:** in v0.1 W3 responses already reference user-project files; the anchor check makes that grounding explicit and prevents the agent from paraphrasing without naming the file. From v0.2 (`.psfm` write-back), any generated SimTalk must carry the W2-style API Evidence Table — same reviewer, same contract, no architecture change needed.
 
 ### 2.3 Skills
 
-| Skill | Purpose | Key procedure |
-|-------|---------|---------------|
-| **`plantsim-kb-qa`** | Documentation Q&A | search_help → format answer → append `**Sources:**` list |
-| **`plantsim-code-author`** | SimTalk authoring & review | Symbol Lookup Cascade → write code → emit `API Evidence Table` |
-| **`plantsim-project-analyst`** | `.psfm` project queries | classify question (locate / trace / summarise) → call appropriate MCP tools |
+| Skill | Purpose | Key procedure | Citation anchor |
+|-------|---------|---------------|-----------------|
+| **`plantsim-kb-qa`** | Documentation Q&A | search_help → format answer → append `**Sources:**` list | `**Sources:**` |
+| **`plantsim-code-author`** | SimTalk authoring & review | Symbol Lookup Cascade → write code → emit `API Evidence Table` | `**API Evidence Table**` |
+| **`plantsim-project-analyst`** | `.psfm` project queries | classify question (locate / trace / summarise) → call appropriate MCP tools | `**File References:**` (v0.2 write-back adds `**API Evidence Table**`) |
 
 Skills are loaded by the agent only when its intent matches, keeping context cost predictable.
 
@@ -179,7 +186,7 @@ user: "Write a method that logs MU throughput per shift to a DataTable."
    ▼ response shown to user
 ```
 
-### W3 — Project query (no reviewer)
+### W3 — Project query (reviewer checks file-ref anchor)
 
 ```
 user: "find all callers of InitPalletJackFleet in the open .psfm project"
@@ -189,10 +196,19 @@ user: "find all callers of InitPalletJackFleet in the open .psfm project"
    ▼ MCP: find_callers("InitPalletJackFleet")
    │     → [{caller_file: "Init.yaml", caller_object: "Init", line_excerpt: "&InitPalletJackFleet.executeIn(0)"}]
    │
-   ▼ formatted answer with file/line references
+   ▼ agent formulates answer + appends:
+       **File References:**
+       - Init.yaml:42 — `&InitPalletJackFleet.executeIn(0)`
    │
-   ▼ reviewer NOT invoked (project queries are grounded in actual files,
-     no external KB citation required)
+   ▼ citation-reviewer subagent
+   │     ├─ anchor `**File References:**` present?  ✓
+   │     ├─ at least one entry under the .psfm root? ✓
+   │     └─ status: "ok"
+   │
+   ▼ response shown to user
+
+  (v0.2 write-back path will additionally emit an API Evidence Table
+   for any newly generated SimTalk — same reviewer covers it.)
 ```
 
 ## 4. Cross-cutting concerns

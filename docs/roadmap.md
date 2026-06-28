@@ -65,6 +65,7 @@ Releases follow [Semantic Versioning](https://semver.org/). `v0.x` releases are 
   - YAML round-trip safety (preserve comments, formatting, key order)
   - Mandatory git-clean or backup precondition
   - New MCP tool: `apply_patch(file, patch)` and `replace_method_body(path, new_body)`
+  - Any generated SimTalk must carry the W2-style **API Evidence Table** — same `citation-reviewer` contract (no architecture change; reviewer already covers W3 from v0.1)
 - [ ] **Call-graph Mermaid output** for `get_object_graph`
 
 ---
