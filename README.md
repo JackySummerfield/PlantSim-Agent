@@ -1,181 +1,152 @@
-<a id="readme-top"></a>
-
 <div align="center">
 
-# PlantSim-Agent
+中文 · [English](README.en.md)
 
-**An open-source GitHub Copilot agent for Siemens Plant Simulation / SimTalk developers.**
+# 🏭 PlantSim-Agent
 
-Bring AI assistance into the closed Plant Simulation ecosystem — knowledge-base Q&A, SimTalk code generation & review, and `.psfm` project analysis, all grounded in your own licensed documentation.
+#### 把 AI 助手带进封闭的 Siemens Plant Simulation 生态 —— 文档问答、SimTalk 编程、`.psfm` 项目分析，全部基于你自己的文档落地
 
-[Spec](./docs/spec.md) · [Architecture](./docs/architecture.md) · [Roadmap](./docs/roadmap.md) · [KB Build Guide](./docs/kb-build-guide.md)
+![VS Code 1.99+](https://img.shields.io/badge/VS_Code-1.99+-007ACC?style=for-the-badge&logo=visualstudiocode&logoColor=white)
+![GitHub Copilot](https://img.shields.io/badge/GitHub_Copilot-Agent-000?style=for-the-badge&logo=githubcopilot&logoColor=white)
+![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![MCP](https://img.shields.io/badge/MCP-Server-8A2BE2?style=for-the-badge)
+![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-pre--alpha-orange?style=for-the-badge)
+
+[为什么做这个](#-为什么做这个) · [它能做什么](#-它能做什么) · [快速开始](#-快速开始) · [架构](#-架构总览) · [Roadmap](./docs/roadmap.md)
 
 </div>
 
 ---
 
-## Table of Contents
+## 🤔 为什么做这个
 
-- [PlantSim-Agent](#plantsim-agent)
-  - [Table of Contents](#table-of-contents)
-  - [About The Project](#about-the-project)
-  - [Why](#why)
-  - [Features](#features)
-  - [Getting Started](#getting-started)
-    - [Prerequisites](#prerequisites)
-    - [Installation](#installation)
-    - [Building Your Local Knowledge Base](#building-your-local-knowledge-base)
-  - [Usage](#usage)
-  - [Architecture Overview](#architecture-overview)
-  - [Roadmap](#roadmap)
-  - [Contributing](#contributing)
-  - [License](#license)
-  - [Acknowledgments](#acknowledgments)
-  - [Trademark Notice](#trademark-notice)
+Siemens Plant Simulation 是工厂离散事件仿真的强者，但它的生态是封闭的——官方文档不公开、建模规范散落各处、SimTalk 2.0 语法不在主流 LLM 的训练语料里。结果就是：
 
----
+- ❌ 通用 AI 拒绝回答 Plant Simulation 问题
+- ❌ 凭空捏造不存在的 API、属性、对象
+- ❌ 给出已经废弃的 SimTalk 1.0 语法
+- ❌ 看不懂 `.psfm` 项目结构，没法回答"这个方法在哪些地方被调用？"
 
-## About The Project
+**PlantSim-Agent** 就是来填这个洞的：一个 GitHub Copilot Custom Agent + MCP Server 的组合，所有回答都基于**你自己的文档**和**你自己的项目**，绝不编造。
 
-Siemens Plant Simulation is a powerful discrete-event simulation tool, but its ecosystem is closed: documentation, modelling conventions, and the SimTalk 2.0 scripting language are not part of any mainstream AI training corpus. As a result, general-purpose AI assistants either refuse to help, hallucinate APIs, or produce SimTalk 1.0 syntax that no longer compiles.
+## 📋 它能做什么
 
-**PlantSim-Agent** closes that gap. It is a GitHub Copilot agent + MCP server combination that gives Plant Simulation developers an AI pair-programmer **grounded in real documentation** and **aware of their actual `.psfm` project**.
+| 能力 | 触发示例 | 说明 |
+|------|---------|------|
+| 知识库问答 | "Buffer.numMU 在 station 阻塞时怎么变化？" | 检索 Help → 给答案 + 注明 Help 章节 |
+| SimTalk 代码助手 | "写个方法记录每班次的 MU 吞吐量到 DataTable" | 生成代码 + 列出每个 API 的来源 |
+| `.psfm` 项目分析 | "哪些方法调用了 `InitPalletJackFleet`？" | 索引整个项目 → 给调用点 + 文件位置 |
+| 引用合规审计 | 自动后置 | `citation-reviewer` 子 agent 检查回答是否带可验证引用，否则重答 |
 
-## Why
+### 设计要点
 
-| Pain point | How this project addresses it |
-|---|---|
-| LLMs fabricate Plant Simulation APIs | Every answer cites a concrete documentation source; a `citation-reviewer` subagent rejects responses that lack citations |
-| SimTalk 2.0 vs 1.0 confusion | Hard-coded rule set + validator catches legacy syntax |
-| Long chat sessions drift away from standards | Code-author skill re-injects modelling standards on every turn |
-| `.psfm` projects are folders of hundreds of YAML files | MCP server pre-indexes the project so the agent can do `find_method`, `find_callers`, `search_code` instantly |
-| Siemens documentation is copyrighted and cannot be redistributed | Users build their **own** local knowledge base from their **own** licensed Help; this repository ships only conversion tools and a small self-authored sample KB |
+- **不投喂 Siemens 内容** — 仓库只发布工具，不分发任何受版权保护的 Help 内容
+- **本地索引** — MCP Server 在你本地用 SQLite FTS5 建索引，问答全程不出机器
+- **可追溯** — 每个答案都有 `**Sources:**` 锚点，链回 Help 章节或代码行
+- **可扩展** — 索引层是抽象基类，v0.2 升级到向量检索（sentence-transformers + sqlite-vec）不破坏上层
 
-## Features
+## 🚀 快速开始
 
-PlantSim-Agent provides three task-oriented capabilities, exposed as a single Copilot agent that routes by intent:
+> ⚠️ **状态：pre-alpha (v0.1 开发中)**。Phase 1 仓库骨架已完成；agent、skill、MCP server 正在建设。看 [Roadmap](./docs/roadmap.md) 追踪进度。
 
-1. **Knowledge-Base Q&A** — Ask about Plant Simulation features, object APIs, SimTalk syntax. Answers cite the exact Help section.
-2. **SimTalk Code Assistant** — Generate, refactor, debug, or review SimTalk 2.0 snippets. Every API used is listed with its source.
-3. **`.psfm` Project Analyst** — Point the agent at a Plant Simulation model folder; ask "where is method X called?", "summarise this object", or "show the call graph".
+**1. 启用 Windows 开发者模式**（一次性，不需管理员）
 
-All three flows are gated by a lightweight `citation-reviewer` subagent that re-runs the response if required citations are missing.
+`设置` → `隐私和安全` → `开发者选项` → `开发人员模式：开`。这样才能在非管理员账户下创建 symlink。
 
-## Getting Started
+**2. Clone 到推荐位置**
 
-> ⚠️ **Status: pre-alpha (v0.1 in progress).** Phase 1 — repository scaffolding — is complete; agents, skills, and the MCP server are being built. Use the [Roadmap](./docs/roadmap.md) to track progress.
+```powershell
+git clone https://github.com/JackySummerfield/plantsim-agent.git $HOME/.copilot/plantsim-agent
+cd $HOME/.copilot/plantsim-agent
+```
 
-### Prerequisites
+> ⚠️ **不要 clone 到 OneDrive / Dropbox / iCloud / Google Drive 目录里**。云盘会破坏 `.git/objects/`。GitHub 本身就是你的远程同步，不需要再叠一层云盘。
 
-- **VS Code** with the **GitHub Copilot Chat** extension installed and signed in
-- **Python ≥ 3.10** (for the MCP server)
-- **Git**
-- A licensed installation of **Siemens Tecnomatix Plant Simulation** (for SimTalk authoring) and access to its Help documentation (PDF or CHM) — *required only if you want full KB Q&A; a small sample KB is bundled for evaluation*
+**3. 安装**
 
-### Installation
+```powershell
+.\scripts\install.ps1
+```
 
-1. **Enable Windows Developer Mode** (one-time, no admin needed):
-   `Settings` → `Privacy & Security` → `For developers` → `Developer Mode: On`. This lets non-admin users create symbolic links.
+脚本会在 `~/.copilot/agents/` 和 `~/.copilot/skills/` 下创建 symlink 指向仓库内的源文件——这样你编辑仓库里的文件 VS Code 立即看到，不需要拷贝同步。Idempotent，`git pull` 后重跑即可。
 
-2. **Clone into the recommended location.** Any path works, but `~/.copilot/plantsim-agent/` keeps everything Copilot-related under one home:
+**4. 注册 MCP Server**（Phase 2 落地后说明）
 
-   ```powershell
-   git clone https://github.com/JackySummerfield/plantsim-agent.git $HOME/.copilot/plantsim-agent
-   cd $HOME/.copilot/plantsim-agent
-   ```
+**5. 重载 VS Code** (`Ctrl+Shift+P` → `Developer: Reload Window`)
 
-   > ⚠️ **Do not clone into a OneDrive / Dropbox / iCloud / Google Drive folder.** Cloud sync corrupts `.git/objects/`. Your remote is GitHub — that is your only sync.
+`PlantSim-Agent` 会出现在 Copilot Chat 的 agent 选择器里。
 
-3. **Run the installer** (creates symlinks under `~/.copilot/agents/` and `~/.copilot/skills/` so VS Code Copilot picks them up):
+### 知识库布局
 
-   ```powershell
-   .\scripts\install.ps1
-   ```
+仓库里有两个并排的知识库目录，**可见性完全不同**：
 
-   The installer is idempotent — rerun it any time you `git pull` new agents or skills. Use `.\scripts\uninstall.ps1` to remove just the symlinks (the repo itself is untouched).
-
-4. **Register the MCP server in your Copilot `mcp.json`** — instructions will land with Phase 2 ([`docs/roadmap.md`](./docs/roadmap.md)).
-
-5. **Reload VS Code** (`Ctrl+Shift+P` → `Developer: Reload Window`). The `PlantSim-Agent` agent should appear in the agent picker.
-
-### Building Your Local Knowledge Base
-
-The repository ships with two knowledge-base directories side by side, with very different visibility:
-
-| Folder | Tracked in git? | Contents |
+| 目录 | 进 git？ | 内容 |
 |---|---|---|
-| [`kb_minimal/`](./kb_minimal/) | ✅ yes | Self-authored sample KB: SimTalk syntax cheat sheet, API index of public method names, modelling-standards template. Ships with the repo so anyone can evaluate the agent immediately. **Contains no Siemens content.** |
-| [`kb_local/`](./kb_local/) | ❌ no — fully gitignored | **Your private KB.** Drop markdown converted from your licensed Plant Simulation Help, plus any company-internal modelling standards, project templates, or notes. The MCP server indexes both folders together but `kb_local/` never leaves your machine. |
+| [`kb_minimal/`](./kb_minimal/) | ✅ 进 | 自撰示例 KB：SimTalk 语法 cheat sheet、API 名称索引、建模规范模板。让人 clone 后能直接试用。**不含任何 Siemens 内容。** |
+| [`kb_local/`](./kb_local/) | ❌ 完全 gitignore | **你的私有 KB**。放从你自己授权版 Help 转出来的 markdown、公司内部建模规范、项目模板、个人笔记。MCP 把两个目录一起索引，但 `kb_local/` 永远不出你的机器。 |
 
-For the full Help-to-markdown conversion workflow, see [`docs/kb-build-guide.md`](./docs/kb-build-guide.md).
+完整的 Help → markdown 转换流程见 [`docs/kb-build-guide.md`](./docs/kb-build-guide.md)。
 
-## Usage
+## ⚙️ 架构总览
 
-Once installed, in any VS Code workspace open Copilot Chat and select **PlantSim-Agent** from the agent picker (or type `/plantsim-copilot`).
+```mermaid
+graph TD
+    A[VS Code Copilot Chat] --> B["plantsim-copilot.agent.md<br/>主编排器"]
+    B -->|意图分流| C[kb-qa skill]
+    B -->|意图分流| D[code-author skill]
+    B -->|意图分流| E[project-analyst skill]
+    C --> F[plantsim-mcp Server<br/>Python + FastMCP]
+    D --> F
+    E --> F
+    F --> G[(SQLite FTS5 索引)]
+    G --> H[kb_minimal/<br/>kb_local/<br/>.psfm project]
+    B -.后置审计.-> I[citation-reviewer<br/>子 agent]
+```
+
+MCP Server 暴露 7 个 tool：`search_help`、`get_api`、`find_method`、`find_callers`、`get_object_graph`、`search_code`、`validate_simtalk`。详见 [`docs/architecture.md`](./docs/architecture.md)。
+
+## 💬 使用示例
+
+打开任意 VS Code workspace 的 Copilot Chat，在 agent 选择器选 **PlantSim-Agent**（或输入 `/plantsim-copilot`）：
 
 ```text
-/plantsim-copilot How do I make a Worker ignore service requests during a break?
+/plantsim-copilot 怎么让 Worker 在 break 期间忽略服务请求？
+/plantsim-copilot 写一个 SimTalk 方法，记录每班次每个 station 的 MU 吞吐量到 DataTable
+/plantsim-copilot 在当前 .psfm 项目里，找出所有调用 InitPalletJackFleet 的方法
 ```
 
-```text
-/plantsim-copilot Write a SimTalk method that logs MU throughput per shift to a DataTable.
-```
+## 🗺️ Roadmap
 
-```text
-/plantsim-copilot In this .psfm project, find every method that calls InitPalletJackFleet.
-```
+- **v0.1** — KB 问答 · SimTalk 代码助手 · `.psfm` 只读分析 · 引用审计
+- **v0.2** — 向量检索 · `validate_simtalk` 升级到 lexer/parser 级 · `.psfm` 写回 + 安全校验
+- **v0.3+** — 调用图可视化 · 自定义模型后端 · 打包成 VS Code 扩展
 
-## Architecture Overview
+完整内容见 [`docs/roadmap.md`](./docs/roadmap.md)。
 
-```
-VS Code Copilot Chat
-   ↓
-[plantsim-copilot.agent.md]    ← main orchestrator
-   ↓ intent routing
-   ├→ kb-qa skill        → MCP: search_help / get_api
-   ├→ code-author skill  → MCP: search_help / get_api / validate_simtalk
-   └→ project-analyst skill → MCP: find_method / find_callers / search_code / get_object_graph
-                              ↓
-                   plantsim-mcp server (Python + FastMCP)
-                              ↓
-                   SQLite FTS5 indices  ←  user-built local KB + .psfm project
-```
+## 🤝 贡献
 
-The optional `citation-reviewer` subagent inspects KB Q&A and code-authoring responses to ensure each one carries verifiable source citations. See [`docs/architecture.md`](./docs/architecture.md) for the full design.
+非常欢迎熟悉 Plant Simulation 的同学参与——这是个吃领域知识的项目。
 
-## Roadmap
+- 大改动先开 Issue 讨论
+- ⚠️ **不要提交从 Siemens 文档摘出来的任何内容**（原文、截图、表格摘录都不行）
+- `kb_minimal/` 里所有内容必须是你自己的总结，不能是 Help 的粘贴
 
-- **v0.1** — KB Q&A · SimTalk code authoring · `.psfm` read-only project queries · citation reviewer
-- **v0.2** — Vector search for KB · richer `validate_simtalk` (lexer/parser) · `.psfm` write-back with safety checks
-- **v0.3+** — Call-graph visualisation · custom model providers · VS Code extension packaging
+正式的贡献指南会在 Phase 4 落地（`docs/contributing.md`）。
 
-Full detail in [`docs/roadmap.md`](./docs/roadmap.md).
+## ⚖️ 商标与版权声明
 
-## Contributing
+本项目**与 Siemens AG 及 Siemens Industry Software Inc. 没有任何隶属、背书或赞助关系**。"Siemens"、"Plant Simulation"、"Tecnomatix"、"SimTalk" 均为 Siemens 或其关联公司的商标，此处仅作指代使用。
 
-Contributions are very welcome — this project benefits enormously from anyone who knows Plant Simulation well. Guidelines will be added in `docs/contributing.md` (Phase 4).
+仓库本身**不分发**任何 Siemens 文档、Plant Simulation Help、模型库或其他 Siemens 专有材料。Agent 使用的所有 KB 内容由每位用户基于自己授权的 Help 在本地构建。
 
-In the meantime:
+## 🌟 References & Credits
 
-- Open an issue to discuss before sending a PR
-- Do **not** submit any content extracted from Siemens documentation (text, screenshots, table excerpts) — see [Trademark Notice](#trademark-notice)
-- All self-authored KB material in `kb_minimal/` must be your own summary, not a paste from Help
+- 设计灵感：[GitHub Copilot Custom Agents](https://code.visualstudio.com/docs/copilot/customization/custom-agents) 和 [Agent Skills](https://code.visualstudio.com/docs/copilot/customization/agent-skills)
+- 工具协议：[Model Context Protocol](https://modelcontextprotocol.io/)
+- 致敬 Steffen Bangsow 的系列教材，几十年的 Plant Simulation 建模词汇基本是这几本书定下来的
+- 感谢 SCC Forum、LinkedIn 和 PSWiki 上的 Plant Simulation 社区多年的公开分享
 
 ## License
 
-Distributed under the MIT License. See [`LICENSE`](./LICENSE) for full text.
-
-## Acknowledgments
-
-- The Plant Simulation community on the SCC Forum, LinkedIn, and PSWiki for years of public knowledge sharing
-- Steffen Bangsow's books for shaping the modelling vocabulary of an entire generation of users
-- [GitHub Copilot Custom Agents](https://code.visualstudio.com/docs/copilot/customization/custom-agents) and [Agent Skills](https://code.visualstudio.com/docs/copilot/customization/agent-skills) for making this pattern possible
-- [Model Context Protocol](https://modelcontextprotocol.io/) for the tool-server architecture
-
-## Trademark Notice
-
-This project is **not affiliated with, endorsed by, or sponsored by Siemens AG or Siemens Industry Software Inc.** "Siemens", "Plant Simulation", "Tecnomatix", and "SimTalk" are trademarks of Siemens or its affiliates and are used here only for nominative reference.
-
-This repository does **not** redistribute Siemens documentation, the Plant Simulation Help, model libraries, or any other proprietary Siemens material. Knowledge-base content used by the agent must be built locally by each user from their own licensed copy of the Help.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+MIT — 见 [LICENSE](LICENSE)。
