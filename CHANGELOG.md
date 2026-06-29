@@ -34,6 +34,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New skill `skills/plantsim-kb-qa/SKILL.md` — mandatory cascade `get_api → did_you_mean retry → search_help → REFUSE`, with a Sources contract and a hard-rule against training-data answers
 - Test count: 81 → 110 (added: psfm indexer/tools, fullmd indexer, validator, get_api real-corpus, suggestion fallbacks)
 
+#### Phase 3 — Skills (commit `c0d1d87`)
+- `skills/plantsim-code-author/SKILL.md` — Symbol-Lookup-Cascade via MCP, always-on rules (10 mandatory + 11 anti-patterns), API Evidence Table contract, Refuse-to-Guess hard stop with cascade trace
+- `skills/plantsim-project-analyst/SKILL.md` — read-only project analysis with four sub-procedures (Locate / Trace / Map / Audit) and always-on Inheritance Audit
+
+#### Phase 3 — Agents
+- `agents/citation-reviewer.agent.md` — read-only subagent (`user-invocable: false`). Regex anchor checks per workflow (W1 `**Sources:**`, W2 `API Evidence Table`, W3 file-path links), forbidden-source phrase scan, Refuse-to-Guess discipline check. Returns a single JSON verdict (`ok` / `missing_citations` / `suspicious_citations` / `malformed_refusal`).
+- `agents/plantsim-copilot.agent.md` — user-facing orchestrator (`user-invocable: true`). Intent routing to the correct skill, mandatory citation-reviewer dispatch after every skilled reply, failure-mode escape hatches for missing indexes and refused answers. Tools: `search`, `edit`, `agent`, `plantsim-copilot-mcp/*`.
+
 ### Changed
 - `mcp/plantsim_mcp/server.py` — return type hints + docstrings updated for `get_api`/`find_method` dict shape
 - `mcp/scripts/smoke_psfm_kongming.py` — adapted to new dict return shapes; verified against real `TCDC_KongMing_PS2504.psfm` (25,463 objects, 7,698 edges, 4 real SimTalk lint issues found in `InitPalletJackFleet`)

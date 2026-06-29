@@ -25,18 +25,21 @@ Releases follow [Semantic Versioning](https://semver.org/). `v0.x` releases are 
 - [x] `storage/base.py` abstract `Index` + `storage/sqlite.py` FTS5 implementation
 - [ ] Help indexer: `help_pdf_to_md.py` (markitdown), `help_md_to_fts.py` ([x] md→fts; [ ] pdf→md)
 - [ ] `.psfm` indexer: `psfm_parser.py`, `psfm_indexer.py` with caller graph
-- [ ] MCP tools: `search_help` [x], `get_api`, `find_method`, `find_callers`, `get_object_graph`, `search_code`, `validate_simtalk` (regex-level rules only)
-- [ ] `pytest` suite covering each tool with fixture data ([x] storage / md indexer / search_help / config — 23 tests)
+- [x] MCP tools: `search_help`, `get_api`, `find_method`, `find_callers`, `get_object_graph`, `search_code`, `validate_simtalk` (regex-level rules: ST001-ST004)
+- [x] `pytest` suite covering each tool with fixture data (110 tests, real-corpus smoke against `TCDC_KongMing_PS2504.psfm`)
+- [x] W3.1 chapter-aware `pts_help_fullmd` indexer (entry_name two-stage lookup; 4944 docs)
+- [x] P0 `did_you_mean` suggestions on miss (storage layer + dict return shape for `get_api` / `find_method`)
 
 ### Phase 3 — Agents and skills
-- [ ] `agents/plantsim-copilot.agent.md` — orchestrator with intent routing
-- [ ] `agents/citation-reviewer.agent.md` — anchor-first, LLM-fallback subagent
-- [ ] `skills/plantsim-kb-qa/` — Q&A procedure with `**Sources:**` anchor contract
-- [ ] `skills/plantsim-code-author/` — port code-author Symbol-Lookup-Cascade + API-Evidence-Table from current skill
-- [ ] `skills/plantsim-project-analyst/` — three sub-procedures (locate / trace / summarise)
+- [x] `agents/plantsim-copilot.agent.md` — orchestrator with intent routing + mandatory citation-review loop
+- [x] `agents/citation-reviewer.agent.md` — anchor-first, JSON-verdict subagent (`user-invocable: false`)
+- [x] `skills/plantsim-kb-qa/` — Q&A cascade with `**Sources:**` contract; refuses on miss
+- [x] `skills/plantsim-code-author/` — Symbol-Lookup-Cascade + API-Evidence-Table + Refuse-to-Guess
+- [x] `skills/plantsim-project-analyst/` — four sub-procedures (locate / trace / map / audit); Inheritance Audit always-on
 
 ### Phase 4 — Installation, evaluation, documentation
-- [ ] `scripts/install.ps1` / `install.sh` — symlink agents & skills into `~/.copilot/`
+- [x] `scripts/install.ps1` — symlink agents & skills into `~/.copilot/` (with Developer-Mode pre-check)
+- [ ] `scripts/install.sh` (Linux/macOS parity)
 - [ ] `scripts/build_kb.py` — interactive wizard: PDF path → MD → FTS5 → config write
 - [ ] Evaluation set: 20 Q&A questions with hand-graded ground truth
 - [ ] Citation-reviewer recall test: 10 deliberately uncited responses
