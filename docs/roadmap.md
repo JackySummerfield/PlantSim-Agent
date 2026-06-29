@@ -43,7 +43,7 @@ Releases follow [Semantic Versioning](https://semver.org/). `v0.x` releases are 
 - [x] `plantsim-copilot-mcp init` wizard (+ `scripts/build_kb.py` shim) — interactive & `--non-interactive` modes; writes `config.toml`, optional `--build` invokes existing indexers
 - [x] Evaluation set: 20 Q&A questions with hand-graded ground truth (`tests/eval/qa_questions.yaml`, all 20 passing against `kb_minimal/`)
 - [x] Citation-reviewer recall test: 10 deliberately uncited responses (`tests/eval/citation_recall.yaml`, all 10 passing against pure-Python regex port)
-- [ ] Cold-install test on a fresh VS Code profile
+- [x] Cold-install test — `tests/cold_install/test_cold_install.py` (3 automated subprocess tests) + [`docs/cold-install.md`](./cold-install.md) (7-step manual gate for VS Code integration)
 
 ### Phase 5 — Public release
 - [ ] GitHub repository public, tag `v0.1.0`

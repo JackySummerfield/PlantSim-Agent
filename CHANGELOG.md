@@ -56,6 +56,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `tests/eval/test_eval_pytest.py` + `tests/eval/conftest.py` — opt-in pytest wrapper gated on `--run-eval`. The unit-test suite (`pytest mcp/`) stays at 119 passing and is unaffected.
 - Current score: **20/20 QA + 10/10 citation = 30/30 green**.
 
+#### Phase 4 — Cold-install verification
+- `tests/cold_install/test_cold_install.py` — 3 subprocess-based smoke tests, each under a fresh `PLANTSIM_AGENT_HOME` tmp dir:
+  1. `plantsim-copilot-mcp init --non-interactive --kb-root <kb_minimal> --build` produces a valid `config.toml` + `help.db` with ≥ 50 indexed docs and the config is round-trippable through `config.load()`.
+  2. `plantsim-copilot-mcp serve` boots and survives a brief idle window — proxy for "imports clean, FastMCP initialised, no missing deps".
+  3. Without `--force`, re-running `init --non-interactive` against an existing config exits non-zero and does NOT overwrite (regression guard against silent config loss in CI / cold installs).
+- **Fix uncovered by test #3**: `build_kb_wizard.cmd_init()` now refuses to overwrite an existing config in `--non-interactive` mode unless `--force` is set, returning exit code 2. Previously non-interactive mode silently clobbered any pre-existing config.
+- `docs/cold-install.md` — 7-step manual gate for the parts an in-process test cannot cover: fresh venv, `pip install -e mcp/`, VS Code agent discovery, citation-reviewer dispatch on a real Copilot turn. Run before tagging each release.
+- Test count: 119 → 122 (3 cold-install tests added).
+
 ### Changed
 - `mcp/plantsim_mcp/server.py` — return type hints + docstrings updated for `get_api`/`find_method` dict shape
 - `mcp/scripts/smoke_psfm_kongming.py` — adapted to new dict return shapes; verified against real `TCDC_KongMing_PS2504.psfm` (25,463 objects, 7,698 edges, 4 real SimTalk lint issues found in `InitPalletJackFleet`)

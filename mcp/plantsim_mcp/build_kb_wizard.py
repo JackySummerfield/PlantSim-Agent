@@ -342,6 +342,17 @@ def cmd_init(args: argparse.Namespace) -> int:
     )
 
     if args.non_interactive:
+        # In non-interactive mode we have no human to confirm an
+        # overwrite — require an explicit --force so cold-install /
+        # CI runs cannot silently clobber a user's existing config.
+        if target_cfg.exists() and not args.force:
+            print(
+                f"Refusing to overwrite existing config at {target_cfg}.\n"
+                "Rerun with --force to replace it, or use --config "
+                "<path> to write somewhere else.",
+                file=sys.stderr,
+            )
+            return 2
         ans = _build_non_interactive(args)
     else:
         if target_cfg.exists() and not args.force:
