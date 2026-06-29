@@ -40,6 +40,20 @@ index_dir = "C:/Users/me/.plantsim-agent/indices"
 
 The indexer aggregates all listed roots into a single `help.db`. Each root contributes its basename as a label so identical filenames across roots never collide. Missing directories are silently skipped, so listing `kb_local/...` before you've populated it is harmless.
 
+## Refreshing After Re-conversion
+
+If you re-convert PTS Help (e.g. a new release) in a separate workspace, [`scripts/sync-help-from-workspace.ps1`](../scripts/sync-help-from-workspace.ps1) mirrors that output into `kb_local/pts_help_<version>/`:
+
+```powershell
+# additive sync (default source = author workspace; override with -Source)
+.\scripts\sync-help-from-workspace.ps1
+
+# new version, true mirror
+.\scripts\sync-help-from-workspace.ps1 -Version 2604 -Source "C:/work/pts_help_2604_md" -Mirror
+```
+
+Rebuild the index afterwards (a proper `build-kb` CLI is on the v0.1 roadmap).
+
 ## Why Not `~/.plantsim-agent/`?
 
 Earlier drafts placed user KB outside the repo entirely. We moved it **inside** the repo (gitignored) so that:
