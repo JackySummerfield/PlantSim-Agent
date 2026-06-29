@@ -21,12 +21,12 @@ Releases follow [Semantic Versioning](https://semver.org/). `v0.x` releases are 
 - [ ] Initial git commit
 
 ### Phase 2 — MCP server (core capability)
-- [ ] `pyproject.toml`, FastMCP entry, `uvx`-compatible packaging
-- [ ] `storage/base.py` abstract `Index` + `storage/sqlite.py` FTS5 implementation
-- [ ] Help indexer: `help_pdf_to_md.py` (markitdown), `help_md_to_fts.py`
+- [x] `pyproject.toml`, FastMCP entry, `uvx`-compatible packaging
+- [x] `storage/base.py` abstract `Index` + `storage/sqlite.py` FTS5 implementation
+- [ ] Help indexer: `help_pdf_to_md.py` (markitdown), `help_md_to_fts.py` ([x] md→fts; [ ] pdf→md)
 - [ ] `.psfm` indexer: `psfm_parser.py`, `psfm_indexer.py` with caller graph
-- [ ] MCP tools: `search_help`, `get_api`, `find_method`, `find_callers`, `get_object_graph`, `search_code`, `validate_simtalk` (regex-level rules only)
-- [ ] `pytest` suite covering each tool with fixture data
+- [ ] MCP tools: `search_help` [x], `get_api`, `find_method`, `find_callers`, `get_object_graph`, `search_code`, `validate_simtalk` (regex-level rules only)
+- [ ] `pytest` suite covering each tool with fixture data ([x] storage / md indexer / search_help / config — 23 tests)
 
 ### Phase 3 — Agents and skills
 - [ ] `agents/plantsim-copilot.agent.md` — orchestrator with intent routing

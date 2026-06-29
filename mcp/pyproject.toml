@@ -1,0 +1,70 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "plantsim-copilot-mcp"
+version = "0.1.0.dev0"
+description = "MCP server for PlantSim-Agent — local index + search over Plant Simulation Help and .psfm projects."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Jacky Tao", email = "46547735+JackySummerfield@users.noreply.github.com" },
+]
+keywords = ["plant-simulation", "simtalk", "mcp", "copilot", "siemens"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+    "fastmcp>=0.2",
+    "pyyaml>=6.0",
+    # tomllib is stdlib on 3.11+; we read TOML directly. tomli is the back-port
+    # for 3.10 only.
+    "tomli>=2.0; python_version < '3.11'",
+]
+
+[project.optional-dependencies]
+# Indexer extras are kept optional so a bare `uvx plantsim-copilot-mcp`
+# install stays small. `pip install plantsim-copilot-mcp[indexers]` pulls in
+# document-conversion tooling for `build-kb`.
+indexers = [
+    "markitdown>=0.0.1a3",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.5",
+]
+
+[project.scripts]
+plantsim-copilot-mcp = "plantsim_mcp.server:main"
+
+[project.urls]
+Homepage = "https://github.com/JackySummerfield/PlantSim-Agent"
+Issues = "https://github.com/JackySummerfield/PlantSim-Agent/issues"
+Changelog = "https://github.com/JackySummerfield/PlantSim-Agent/blob/main/CHANGELOG.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["plantsim_mcp"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["E501"]

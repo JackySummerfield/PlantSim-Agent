@@ -8,11 +8,11 @@
 
 ## 1. Problem
 
-Siemens Tecnomatix Plant Simulation is the de facto standard for discrete-event simulation in manufacturing and logistics, but its ecosystem is closed in three painful ways:
+Siemens Tecnomatix Plant Simulation is the most common platform for discrete-event simulation in manufacturing and logistics, but its ecosystem is closed in three painful ways:
 
-1. **Documentation is proprietary.** The Help is not on the public web; it ships with the licensed install and is covered by Siemens IP terms.
+1. **Documentation is Proprietary.** The Help is not on the public web; it ships with the licensed install and is covered by Siemens IP terms.
 2. **SimTalk 2.0 is niche.** General-purpose LLMs were trained on very little SimTalk and routinely produce SimTalk 1.0 syntax (which no longer compiles) or invent APIs.
-3. **`.psfm` projects are folders of hundreds of YAML files.** Even if an LLM knew SimTalk, navigating a real project to answer "where is `InitPalletJackFleet` called?" requires structured indexing.
+3. **`.psfm` projects are folders of hundreds of YAML files.** Even if an LLM knew SimTalk, navigating a real project to answer "where is `AGVFleet` called?" requires structured indexing.
 
 The result: Plant Simulation developers cannot benefit from the modern AI workflow that other developers take for granted.
 
@@ -41,7 +41,7 @@ Trustworthiness is non-negotiable: **every answer must carry a verifiable citati
 
 | Persona | Skill level | Primary need |
 |---------|-------------|--------------|
-| **Plant Sim Engineer** | Intermediate SimTalk; deep modelling | W1, W2 — fewer Help lookups, faster snippet writing |
+| **PlantSim Engineer** | Intermediate SimTalk; deep modelling | W1, W2 — fewer Help lookups, faster snippet writing |
 | **New Plant Sim User** | Beginner | W1 — explain concepts, point to right Help section |
 | **Senior Modeller / Architect** | Expert | W3 — review and refactor inherited projects |
 | **External developer / consultant** | Variable | W2, W3 — onboard quickly to a customer's existing model |
