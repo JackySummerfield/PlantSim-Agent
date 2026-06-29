@@ -81,7 +81,25 @@ CI / 冷装机器可走非交互模式：
 plantsim-copilot-mcp init --non-interactive --kb-root .\kb_minimal --build
 ```
 
-**4. 注册 MCP Server**（Phase 2 落地后说明）
+**4. 注册 MCP Server**
+
+在 VS Code 用户级 `mcp.json` 加一段（Windows 路径 `%APPDATA%\Code\User\mcp.json`，macOS `~/Library/Application Support/Code/User/mcp.json`，Linux `~/.config/Code/User/mcp.json`）：
+
+```json
+{
+  "servers": {
+    "plantsim-copilot-mcp": {
+      "type": "stdio",
+      "command": "plantsim-copilot-mcp",
+      "args": ["serve"]
+    }
+  }
+}
+```
+
+server 名必须是 `plantsim-copilot-mcp`（orchestrator agent 白名单 `plantsim-copilot-mcp/*` 靠它）。如果 VS Code 找不到命令（典型场景：装在 conda/venv 里但 VS Code 不是从那个环境启动的），把 `command` 改成绝对路径，例如 `"C:\\ProgramData\\miniforge3\\Scripts\\plantsim-copilot-mcp.exe"`，用 `(Get-Command plantsim-copilot-mcp).Source` 查到。
+
+完整冷装核对清单见 [`docs/cold-install.md`](./docs/cold-install.md)。
 
 **5. 重载 VS Code** (`Ctrl+Shift+P` → `Developer: Reload Window`)
 

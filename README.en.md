@@ -63,7 +63,25 @@ cd $HOME/.copilot/plantsim-agent
 
 The script creates symlinks under `~/.copilot/agents/` and `~/.copilot/skills/` pointing back to the repo, so edits in the repo are picked up by VS Code immediately — no copy step. Idempotent; rerun after every `git pull`.
 
-**3. Register the MCP Server** (instructions land with Phase 2)
+**3. Register the MCP Server**
+
+Add an entry to VS Code's user-level `mcp.json` (Windows `%APPDATA%\Code\User\mcp.json`, macOS `~/Library/Application Support/Code/User/mcp.json`, Linux `~/.config/Code/User/mcp.json`):
+
+```json
+{
+  "servers": {
+    "plantsim-copilot-mcp": {
+      "type": "stdio",
+      "command": "plantsim-copilot-mcp",
+      "args": ["serve"]
+    }
+  }
+}
+```
+
+The server name **must** be `plantsim-copilot-mcp` — the orchestrator agent's `plantsim-copilot-mcp/*` tool whitelist depends on it. If VS Code can't find the command on its PATH (typical when the package lives in a conda/venv that VS Code wasn't launched from), substitute the absolute executable path, e.g. `"C:\\ProgramData\\miniforge3\\Scripts\\plantsim-copilot-mcp.exe"` — find it with `(Get-Command plantsim-copilot-mcp).Source`.
+
+Full cold-install checklist: [`docs/cold-install.md`](./docs/cold-install.md).
 
 **4. Reload VS Code** (`Ctrl+Shift+P` → `Developer: Reload Window`)
 

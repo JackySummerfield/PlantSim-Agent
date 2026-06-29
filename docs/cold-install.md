@@ -73,11 +73,43 @@ Verify:
 
 ### 5. Register the MCP server in VS Code
 
-> Once the v0.1 docs settle on the exact MCP-registration syntax, fill this section in. For now, follow whatever pattern your local VS Code build uses.
+VS Code 1.99+ reads MCP servers from a user-level `mcp.json`. Create or merge into:
+
+- **Windows:** `%APPDATA%\Code\User\mcp.json`
+- **macOS:** `~/Library/Application Support/Code/User/mcp.json`
+- **Linux:** `~/.config/Code/User/mcp.json`
+
+```json
+{
+  "servers": {
+    "plantsim-copilot-mcp": {
+      "type": "stdio",
+      "command": "plantsim-copilot-mcp",
+      "args": ["serve"]
+    }
+  }
+}
+```
+
+Notes:
+- The server name **must** be `plantsim-copilot-mcp` — the orchestrator agent's `tools: [..., 'plantsim-copilot-mcp/*']` whitelist depends on it.
+- If `plantsim-copilot-mcp` isn't on the PATH VS Code inherits (common when the package lives in a conda/venv that VS Code wasn't launched from), substitute the absolute path to the executable, e.g. `"command": "C:\\ProgramData\\miniforge3\\Scripts\\plantsim-copilot-mcp.exe"`. Find it with `(Get-Command plantsim-copilot-mcp).Source`.
+- Prefer the user-level file over `<workspace>/.vscode/mcp.json` so the agent works in every workspace.
+
+Smoke-test from the terminal (optional but quick) — the server should reply to `initialize` and `tools/list`:
+
+```powershell
+@'
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"smoke","version":"0"}}}
+{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
+{"jsonrpc":"2.0","id":2,"method":"tools/list"}
+'@ | plantsim-copilot-mcp serve
+```
 
 Verify:
-- [ ] `plantsim-copilot-mcp` shows up in the Copilot MCP server list
-- [ ] No "server failed to start" error in Copilot Output panel
+- [ ] `Ctrl+Shift+P` → `MCP: List Servers` shows `plantsim-copilot-mcp` with status **Started**
+- [ ] `tools/list` returns all 7 tools (`search_help`, `get_api`, `find_method`, `find_callers`, `search_code`, `get_object_graph`, `validate_simtalk`)
+- [ ] No "server failed to start" error in the Copilot Output panel
 
 ### 6. Reload VS Code and exercise the agent
 
