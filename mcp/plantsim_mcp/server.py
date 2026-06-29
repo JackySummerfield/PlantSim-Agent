@@ -22,9 +22,11 @@ from . import __version__
 from .config import Config, load
 from .tools import find_callers as _find_callers
 from .tools import find_method as _find_method
+from .tools import get_api as _get_api
 from .tools import get_object_graph as _get_object_graph
 from .tools import search_code as _search_code
 from .tools import search_help as _search_help
+from .tools import validate_simtalk as _validate_simtalk
 
 
 def build_server(config: Config | None = None) -> Any:
@@ -99,6 +101,41 @@ def build_server(config: Config | None = None) -> Any:
         """
         return _get_object_graph.get_object_graph(name=name, uuid=uuid, config=cfg)
 
+    @mcp.tool()
+    def validate_simtalk(
+        source: str | None = None,
+        uuid: str | None = None,
+        ignore_rules: list[str] | None = None,
+    ) -> list[dict[str, Any]]:
+        """Lint a SimTalk method body for SimTalk 2.0 best-practice issues.
+
+        Supply either inline ``source`` or a ``uuid`` of an indexed Method.
+        Returns issues with rule_id, severity, line/column, message, and a
+        fix_hint where applicable.
+
+        Args:
+            source: Raw SimTalk source. Wins if both are provided.
+            uuid: UUID of an indexed Method body to validate.
+            ignore_rules: Rule IDs to skip (e.g. ["ST003"]).
+        """
+        return _validate_simtalk.validate_simtalk(
+            source=source, uuid=uuid, ignore_rules=ignore_rules, config=cfg
+        )
+
+    @mcp.tool()
+    def get_api(name: str, top_k: int = 5) -> list[dict[str, Any]]:
+        """Precise SimTalk API lookup against the help KB.
+
+        Returns help-doc sections titled "<Name> [SimTalk]" (with any
+        disambiguator suffix). For natural-language questions use
+        search_help instead.
+
+        Args:
+            name: SimTalk identifier (case-sensitive).
+            top_k: Maximum entries to return (default 5).
+        """
+        return _get_api.get_api(name=name, top_k=top_k, config=cfg)
+
     return mcp
 
 
@@ -134,6 +171,42 @@ def _cmd_build_project(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_build_kb(args: argparse.Namespace) -> int:
+    """Build / rebuild the help KB index from configured roots."""
+    from .indexers.help_md_to_fts import build
+    from .storage.sqlite import SQLiteFTSIndex
+
+    cfg = load()
+    if args.root:
+        roots = [Path(r).resolve() for r in args.root]
+    else:
+        roots = list(cfg.paths.help_kb_roots)
+    if not roots:
+        print(
+            "error: no --root given and no [paths].help_kb_roots in config",
+            file=sys.stderr,
+        )
+        return 2
+    missing = [r for r in roots if not r.is_dir()]
+    if missing:
+        for r in missing:
+            print(f"error: KB root not found: {r}", file=sys.stderr)
+        return 2
+
+    db_path = cfg.paths.help_db
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    with SQLiteFTSIndex(db_path) as idx:
+        idx.delete_all()
+        written = build(roots, idx)
+    print(
+        f"indexed {len(roots)} root(s) -> {db_path}\n"
+        f"  docs written: {written}"
+    )
+    for r in roots:
+        print(f"  - {r}")
+    return 0
+
+
 def _cmd_serve(_args: argparse.Namespace) -> int:
     build_server().run()
     return 0
@@ -144,6 +217,7 @@ def main(argv: list[str] | None = None) -> int:
 
     Subcommands:
       * ``serve`` (default) — run the MCP server on stdio
+      * ``build-kb [--root <md-dir>]`` — index a markdown KB
       * ``build-project --project <path>`` — index a ``.psfm`` folder
     """
     parser = argparse.ArgumentParser(prog="plantsim-copilot-mcp")
@@ -158,9 +232,20 @@ def main(argv: list[str] | None = None) -> int:
         help="path to .psfm folder (overrides config.paths.default_project)",
     )
 
+    bk = sub.add_parser("build-kb", help="index the help knowledge base")
+    bk.add_argument(
+        "--root",
+        action="append",
+        default=None,
+        help="markdown KB root (repeat for multiple). "
+        "Overrides config.paths.help_kb_roots.",
+    )
+
     args = parser.parse_args(argv)
     if args.cmd == "build-project":
         return _cmd_build_project(args)
+    if args.cmd == "build-kb":
+        return _cmd_build_kb(args)
     return _cmd_serve(args)
 
 

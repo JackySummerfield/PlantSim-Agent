@@ -169,3 +169,44 @@ class SQLiteFTSIndex(Index):
     def count(self) -> int:
         conn = self._require_conn()
         return conn.execute("SELECT COUNT(*) FROM docs_meta").fetchone()[0]
+
+    def find_by_section(self, name: str, top_k: int = 10) -> list[Hit]:
+        """Find docs whose section starts with ``"<name> [SimTalk]"``.
+
+        This is the high-precision API lookup path used by
+        :func:`~plantsim_mcp.tools.get_api.get_api`. We scan
+        ``docs_meta.section`` with a ``LIKE`` prefix instead of going
+        through FTS, because FTS's token-split makes ``"<Name>
+        [SimTalk]"`` queries noisy (``[`` and ``]`` are operators).
+        Hits are sorted shortest-section-first so generic entries
+        outrank disambiguators like ``Active [SimTalk] - fluid objects``.
+        """
+        conn = self._require_conn()
+        if not name.strip():
+            return []
+        # PTS Help convention: sections are exactly "<Name> [SimTalk]"
+        # or "<Name> [SimTalk] - <qualifier>". We also accept entries
+        # where the [SimTalk] tag is absent (a few non-API headings).
+        like = f"{name} [SimTalk]%"
+        cur = conn.execute(
+            """
+            SELECT m.doc_id, m.file_path, m.section,
+                   substr(f.content, 1, 240) AS snippet
+            FROM docs_meta m
+            JOIN docs_fts f ON m.doc_id = f.doc_id
+            WHERE m.section LIKE ?
+            ORDER BY length(m.section), m.section
+            LIMIT ?
+            """,
+            (like, top_k),
+        )
+        return [
+            Hit(
+                doc_id=row[0],
+                file_path=row[1],
+                section=row[2],
+                snippet=row[3],
+                score=0.0,
+            )
+            for row in cur.fetchall()
+        ]

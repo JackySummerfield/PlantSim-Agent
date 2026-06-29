@@ -21,6 +21,7 @@ from plantsim_mcp.tools.find_callers import find_callers
 from plantsim_mcp.tools.find_method import find_method
 from plantsim_mcp.tools.get_object_graph import get_object_graph
 from plantsim_mcp.tools.search_code import search_code
+from plantsim_mcp.tools.validate_simtalk import validate_simtalk
 
 
 PROJECT = Path(
@@ -77,6 +78,22 @@ def main() -> int:
         print(f"  predecessors: {len(g['predecessors'])}  successors: {len(g['successors'])}")
     else:
         print("  not found")
+
+    print("\n=== validate_simtalk(uuid=InitPalletJackFleet)")
+    init_hits = find_method("InitPalletJackFleet", config=cfg)
+    if init_hits:
+        init_uuid = init_hits[0]["uuid"]
+        try:
+            issues = validate_simtalk(uuid=init_uuid, config=cfg)
+        except KeyError as exc:
+            print(f"  no body: {exc}")
+        else:
+            print(f"  {len(issues)} issue(s) found")
+            for it in issues[:5]:
+                print(
+                    f"    [{it['rule_id']} {it['severity']}] "
+                    f"line {it['line']}: {it['message'][:100]}"
+                )
 
     return 0
 
