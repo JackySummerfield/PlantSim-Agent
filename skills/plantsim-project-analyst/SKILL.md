@@ -153,7 +153,7 @@ Every reported file path comes from a tool response. Format inline
 references as a markdown link to the path the tool returned:
 
 ```text
-- `[InitPalletJackFleet]` defined in [Models/Model/InitPalletJackFleet.yaml](Models/Model/InitPalletJackFleet.yaml)
+- `[InitFleet]` defined in [Models/Model/InitFleet.yaml](Models/Model/InitFleet.yaml)
 ```
 
 For Methods discovered via `find_method`, include the `uuid` (first 8
@@ -168,7 +168,7 @@ For lint issues from `validate_simtalk`:
 
 ```text
 - [ST001 warning] line 36: `.move()` return ignored — *fix_hint: capture
-  result and branch on failure* — in [Models/Model/InitPalletJackFleet.yaml](Models/Model/InitPalletJackFleet.yaml)
+  result and branch on failure* — in [Models/Model/InitFleet.yaml](Models/Model/InitFleet.yaml)
 ```
 
 ---
@@ -222,30 +222,30 @@ Output:
 ### Trace
 
 User:
-> who calls `PalletJackResults`?
+> who calls `FleetResults`?
 
 Reasoning:
-- `find_callers(name="PalletJackResults", top_k=20)`.
+- `find_callers(name="FleetResults", top_k=20)`.
 
 Output:
-> 2 callers of `PalletJackResults` in the project:
+> 2 callers of `FleetResults` in the project:
 >
-> - `UpdatePalletJackResults` — [Models/Model/UpdatePalletJackResults.yaml](Models/Model/UpdatePalletJackResults.yaml)
->   `[[PalletJackResults]]["Idle %",i] := 100 - [[PalletJackResults]]["Task %",i]`
-> - `InitPalletJackFleet` — [Models/Model/InitPalletJackFleet.yaml](Models/Model/InitPalletJackFleet.yaml)
->   `[[PalletJackResults]]["Pallet Jack",[[PalletJackResults]].ydim+1`
+> - `UpdateFleetResults` — [Models/Model/UpdateFleetResults.yaml](Models/Model/UpdateFleetResults.yaml)
+>   `[[FleetResults]]["Idle %",i] := 100 - [[FleetResults]]["Task %",i]`
+> - `InitFleet` — [Models/Model/InitFleet.yaml](Models/Model/InitFleet.yaml)
+>   `[[FleetResults]]["Fleet",[[FleetResults]].ydim+1`
 
 ### Audit
 
 User:
-> 帮我审一下 `InitPalletJackFleet` 这段代码。
+> 帮我审一下 `InitFleet` 这段代码。
 
 Reasoning:
-- `find_method("InitPalletJackFleet")` → 1 hit, uuid `78556fac…`.
+- `find_method("InitFleet")` → 1 hit, uuid `78556fac…`.
 - `validate_simtalk(uuid="78556fac…")` → 4 issues.
 
 Output:
-> `InitPalletJackFleet` — [Models/Model/InitPalletJackFleet.yaml](Models/Model/InitPalletJackFleet.yaml)
+> `InitFleet` — [Models/Model/InitFleet.yaml](Models/Model/InitFleet.yaml)
 > 4 issue(s) found:
 >
 > - **[ST002 info] line 5**: local `i` declared without explicit type — defaults to `any`, slower.

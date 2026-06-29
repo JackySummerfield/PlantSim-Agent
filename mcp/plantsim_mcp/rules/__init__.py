@@ -3,8 +3,7 @@
 Each rule is a tiny callable that consumes a list of source lines and
 yields :class:`Issue` records. Rules are intentionally regex-level and
 **stateless** — SimTalk has no public parser we can lean on, so we
-look for syntactic patterns the P&G Modeling Standards explicitly
-call out:
+look for syntactic patterns common modeling standards call out:
 
 * SimTalk 1.0 → 2.0 outdated identifiers (per
   ``12_SimTalk_Reference/05_Outdated_SimTalk_Names`` in the PTS Help).

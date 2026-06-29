@@ -11,7 +11,7 @@
 ![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![MCP](https://img.shields.io/badge/MCP-Server-8A2BE2?style=for-the-badge)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-pre--alpha-orange?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-v0.1.0-blue?style=for-the-badge)
 
 [为什么做这个](#-为什么做这个) · [它能做什么](#-它能做什么) · [快速开始](#-快速开始) · [架构](#-架构总览) · [Roadmap](./docs/roadmap.md)
 
@@ -46,7 +46,7 @@ Plant Simulation 是最受欢迎的工厂离散事件仿真软件之一，但它
 
 ## 🚀 快速开始
 
-> ⚠️ **状态：pre-alpha (v0.1 开发中)**。Phase 1 仓库骨架已完成；agent、skill、MCP server 正在建设。看 [Roadmap](./docs/roadmap.md) 追踪进度。
+> ✅ **状态：v0.1.0 已发布**。包含 7 个 MCP tool、3 个 skill、2 个 agent（编排器 + 引用审计），122 个单元测试 + 30/30 评估通过。看 [Roadmap](./docs/roadmap.md) 了解 v0.2 计划。
 
 **1. Clone 到推荐位置**
 

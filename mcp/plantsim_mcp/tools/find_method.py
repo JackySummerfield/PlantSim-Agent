@@ -3,7 +3,7 @@
 Returns the method's defining object plus any **overriding children**
 (objects whose ``Origin`` points at the found method). This is the
 key inheritance-awareness feature: when the user asks "where is
-``InitPalletJackFleet``?", they should see (a) the parent definition
+``InitFleet``?", they should see (a) the parent definition
 they can edit, and (b) the children that override it, because those
 children will *not* pick up the parent's changes.
 

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "plantsim-copilot-mcp"
-version = "0.1.0.dev0"
+version = "0.1.0"
 description = "MCP server for PlantSim-Agent — local index + search over Plant Simulation Help and .psfm projects."
 readme = "README.md"
 requires-python = ">=3.10"

@@ -55,7 +55,7 @@ def sample_kb(tmp_path: Path) -> Path:
 
 
 # ---------------------------------------------------------------------------
-# .psfm fixture — mirrors the real KongMing layout in miniature
+# .psfm fixture — mirrors a realistic .psfm layout in miniature
 # ---------------------------------------------------------------------------
 
 # Parent Frame definition for a "Station" class. No Origin → root.
@@ -69,7 +69,7 @@ $SequenceNumber: 2
 # A Variable on the Station parent. No Origin → root.
 _STATION_PALLET_CAPACITY_YAML = """\
 InternalClassType: Variable
-Name: PalletCapacity
+Name: FleetCapacity
 DataType: integer
 UUID: 22222222-2222-2222-2222-222222222222
 $SequenceNumber: 40
@@ -83,8 +83,8 @@ Name: Init
 UUID: 33333333-3333-3333-3333-333333333333
 $SequenceNumber: 3
 Program: |+1
- root.PalletCapacity := 20
- InitPalletJackFleet.executeIn(0)
+ root.FleetCapacity := 20
+ InitFleet.executeIn(0)
 """
 
 # A Buffer with $Predecessors and an inline $CustomAttributes method.
@@ -109,13 +109,13 @@ $CustomAttributes:
 # Top-level Method directly in the Model frame.
 _MODEL_INIT_FLEET_YAML = """\
 InternalClassType: Method
-Name: InitPalletJackFleet
+Name: InitFleet
 UUID: 55555555-5555-5555-5555-555555555555
 $SequenceNumber: 10
 Program: |+1
  local FleetNum : integer
- for var i:=1 to PalletJackInput.ydim
- \tFleetNum := str_to_obj("PalletJackNumZ").value
+ for var i:=1 to FleetInput.ydim
+ \tFleetNum := str_to_obj("FleetNumZ").value
  end
 """
 
@@ -138,7 +138,7 @@ Origin: 11111111-1111-1111-1111-111111111111
 UUID: 77777777-7777-7777-7777-777777777777
 $SequenceNumber: 100
 ---
-$ObjectName: PalletCapacity
+$ObjectName: FleetCapacity
 InternalClassType: Variable
 Origin: 22222222-2222-2222-2222-222222222222
 UUID: 88888888-8888-8888-8888-888888888888
@@ -152,7 +152,7 @@ Origin: 33333333-3333-3333-3333-333333333333
 UUID: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
 $SequenceNumber: 2
 Program: |+1
- root.PalletCapacity := 50
+ root.FleetCapacity := 50
 ---
 $ObjectName: Buffer
 InternalClassType: Buffer
@@ -164,19 +164,19 @@ $SequenceNumber: 3
 
 @pytest.fixture
 def sample_psfm(tmp_path: Path) -> Path:
-    """Create a miniature ``.psfm`` folder mirroring the real KongMing layout.
+    """Create a miniature ``.psfm`` folder mirroring a realistic layout.
 
     Structure:
         Sample.psfm/
             Models/
                 Station/
                     $.yaml                  (parent Frame)
-                    PalletCapacity.yaml     (parent Variable)
+                    FleetCapacity.yaml      (parent Variable)
                     Init.yaml               (parent Method w/ Program)
                     Buffer.yaml             (parent Buffer w/ inline method + $Predecessors)
                 Model/
                     $.yaml                  (scene Frame)
-                    InitPalletJackFleet.yaml  (Method directly in Model)
+                    InitFleet.yaml          (Method directly in Model)
                     Station_Instance1/
                         $.yaml              (multi-doc: instance + pure-inh children + override)
     """
@@ -188,13 +188,13 @@ def sample_psfm(tmp_path: Path) -> Path:
     instance.mkdir(parents=True)
 
     (station / "$.yaml").write_text(_STATION_FRAME_YAML, encoding="utf-8")
-    (station / "PalletCapacity.yaml").write_text(
+    (station / "FleetCapacity.yaml").write_text(
         _STATION_PALLET_CAPACITY_YAML, encoding="utf-8"
     )
     (station / "Init.yaml").write_text(_STATION_INIT_METHOD_YAML, encoding="utf-8")
     (station / "Buffer.yaml").write_text(_STATION_BUFFER_YAML, encoding="utf-8")
     (model / "$.yaml").write_text(_MODEL_FRAME_YAML, encoding="utf-8")
-    (model / "InitPalletJackFleet.yaml").write_text(
+    (model / "InitFleet.yaml").write_text(
         _MODEL_INIT_FLEET_YAML, encoding="utf-8"
     )
     (instance / "$.yaml").write_text(_INSTANCE_MULTI_DOC_YAML, encoding="utf-8")

@@ -26,7 +26,7 @@ Releases follow [Semantic Versioning](https://semver.org/). `v0.x` releases are 
 - [ ] Help indexer: `help_pdf_to_md.py` (markitdown), `help_md_to_fts.py` ([x] md→fts; [ ] pdf→md)
 - [ ] `.psfm` indexer: `psfm_parser.py`, `psfm_indexer.py` with caller graph
 - [x] MCP tools: `search_help`, `get_api`, `find_method`, `find_callers`, `get_object_graph`, `search_code`, `validate_simtalk` (regex-level rules: ST001-ST004)
-- [x] `pytest` suite covering each tool with fixture data (110 tests, real-corpus smoke against `TCDC_KongMing_PS2504.psfm`)
+- [x] `pytest` suite covering each tool with fixture data (110 tests, real-corpus smoke against a large-scale logistics `.psfm` project)
 - [x] W3.1 chapter-aware `pts_help_fullmd` indexer (entry_name two-stage lookup; 4944 docs)
 - [x] P0 `did_you_mean` suggestions on miss (storage layer + dict return shape for `get_api` / `find_method`)
 
@@ -39,7 +39,7 @@ Releases follow [Semantic Versioning](https://semver.org/). `v0.x` releases are 
 
 ### Phase 4 — Installation, evaluation, documentation
 - [x] `scripts/install.ps1` — symlink agents & skills into `~/.copilot/` (with Developer-Mode pre-check)
-- [ ] `scripts/install.sh` (Linux/macOS parity)
+- [x] ~~`scripts/install.sh` (Linux/macOS parity)~~ — **skipped**: Plant Simulation is Windows-only, so a Linux/macOS install path has no closed loop (the agent has no value without the PS host)
 - [x] `plantsim-copilot-mcp init` wizard (+ `scripts/build_kb.py` shim) — interactive & `--non-interactive` modes; writes `config.toml`, optional `--build` invokes existing indexers
 - [x] Evaluation set: 20 Q&A questions with hand-graded ground truth (`tests/eval/qa_questions.yaml`, all 20 passing against `kb_minimal/`)
 - [x] Citation-reviewer recall test: 10 deliberately uncited responses (`tests/eval/citation_recall.yaml`, all 10 passing against pure-Python regex port)
@@ -47,7 +47,7 @@ Releases follow [Semantic Versioning](https://semver.org/). `v0.x` releases are 
 
 ### Phase 5 — Public release
 - [ ] GitHub repository public, tag `v0.1.0`
-- [ ] Release notes
+- [x] Release notes (`docs/release-notes/v0.1.0.md`) + announcement drafts (`docs/release-notes/v0.1.0-announcement.md`)
 - [ ] Announcement on Plant Simulation Community / LinkedIn / PSWiki
 
 ---

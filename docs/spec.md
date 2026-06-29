@@ -89,7 +89,7 @@ See [`docs/roadmap.md`](./roadmap.md) for v0.2 and beyond.
 |-----------|---------|--------|
 | **KB Q&A accuracy** | 20-question hand-graded benchmark | ≥ 80 % correct & cited |
 | **Citation reviewer recall** | 10 deliberately uncited responses | 10/10 flagged |
-| **Indexing speed** | KongMing `.psfm` (~1000+ YAML files) | < 2 minutes cold build |
+| **Indexing speed** | Large `.psfm` (~1000+ YAML files) | < 2 minutes cold build |
 | **Hallucinated-API rate** | 10 representative coding tasks, human review | 0 fabricated APIs in cited code |
 | **Cold-install time** | Fresh VS Code profile → working agent | ≤ 5 minutes |
 

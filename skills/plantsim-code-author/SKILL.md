@@ -26,7 +26,7 @@ You **never invent** method names, signatures, or attribute names.
 | `get_api(name)`                   | A single symbol — `.move`, `Buffer`, `StatNumOut`. Returns help section + `did_you_mean`.  |
 | `search_help(query, top_k)`       | "How do I X?" free-text questions, when you have no clean identifier.                       |
 | `find_method(name)`               | Look up an existing Method in the user's `.psfm` project (inheritance-aware).               |
-| `find_callers(name)`              | Identifier-aware FTS over all SimTalk bodies — "what else calls `PalletJackResults`?".      |
+| `find_callers(name)`              | Identifier-aware FTS over all SimTalk bodies — "what else calls `FleetResults`?".      |
 | `search_code(query, top_k)`       | Free-text FTS over SimTalk bodies — find a code pattern across the project.                 |
 | `get_object_graph(name|uuid)`     | Inheritance + predecessor/successor neighbourhood of an object.                             |
 | `validate_simtalk(source|uuid)`   | Lint a SimTalk body for `ST001`–`ST004` issues. **Always run on generated code.**           |

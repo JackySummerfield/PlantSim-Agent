@@ -101,14 +101,14 @@
   workflow: W3
   expected: { status: ok }
   body: |
-    `InitPalletJackFleet` is defined in [MaterialFlow/AGV/InitPalletJackFleet.simtalk](MaterialFlow/AGV/InitPalletJackFleet.simtalk)
+    `InitFleet` is defined in [MaterialFlow/AGV/InitFleet.simtalk](MaterialFlow/AGV/InitFleet.simtalk)
     and is called from [Models/Main/init.simtalk](Models/Main/init.simtalk).
 
 - id: c09-w3-missing-path-links
   workflow: W3
   expected: { status: missing_citations }
   body: |
-    `InitPalletJackFleet` lives in the AGV frame and is called at model init.
+    `InitFleet` lives in the AGV frame and is called at model init.
     See the documentation for the calling convention.
 
 - id: c10-w2-malformed-refusal

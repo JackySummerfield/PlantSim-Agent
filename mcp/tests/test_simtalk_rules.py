@@ -156,7 +156,7 @@ def test_validate_simtalk_by_uuid_against_indexed_project(
     issues = validate_simtalk(
         uuid="33333333-3333-3333-3333-333333333333", config=cfg
     )
-    # The body contains `root.PalletCapacity := 20` + `InitPalletJackFleet.executeIn(0)`
+    # The body contains `root.FleetCapacity := 20` + `InitFleet.executeIn(0)`
     # No untyped var, no .move, no outdated names — should be clean.
     assert issues == []
 

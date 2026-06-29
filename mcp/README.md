@@ -6,12 +6,19 @@ The Python MCP server that backs **[PlantSim-Agent](../README.md)**. See [`../do
 
 | Module | Role |
 |--------|------|
-| `plantsim_mcp.server` | FastMCP entry point — `plantsim-copilot-mcp` console script |
+| `plantsim_mcp.server` | FastMCP entry point — `plantsim-copilot-mcp` console script with `init` / `serve` / `build-kb` / `build-project` subcommands |
 | `plantsim_mcp.config` | TOML config loader (`~/.plantsim-agent/config.toml`) |
+| `plantsim_mcp.build_kb_wizard` | Interactive + `--non-interactive` setup wizard backing `plantsim-copilot-mcp init` |
 | `plantsim_mcp.storage.base` | `Index` abstract base class — seam for v0.2 vector store |
 | `plantsim_mcp.storage.sqlite` | SQLite + FTS5 implementation (v0.1) |
+| `plantsim_mcp.storage.project` | `.psfm` project store (objects, code_units, flow_edges) |
 | `plantsim_mcp.indexers.help_md_to_fts` | Walk a markdown KB, split by `##`/`###`, write to an `Index` |
-| `plantsim_mcp.tools.search_help` | W1 — Documentation Q&A search tool |
+| `plantsim_mcp.indexers.pts_help_fullmd_indexer` | Chapter-aware indexer for `pts_help_2504_fullmd/ChXX.md` |
+| `plantsim_mcp.indexers.psfm_indexer` | Walk a `.psfm` folder, resolve inheritance, extract flow edges |
+| `plantsim_mcp.tools.search_help` | W1 — Documentation Q&A |
+| `plantsim_mcp.tools.get_api` | W1 — Precise SimTalk API lookup with `did_you_mean` |
+| `plantsim_mcp.tools.find_method` / `find_callers` / `search_code` / `get_object_graph` | W3 — `.psfm` project analysis |
+| `plantsim_mcp.tools.validate_simtalk` | W2 — SimTalk lint (ST001-ST004) |
 
 ## Dev install
 
@@ -44,11 +51,11 @@ index_dir = "C:/Users/me/.plantsim-agent/indices"
 ```
 
 ```powershell
-python -c "from plantsim_mcp.config import load; from plantsim_mcp.indexers import help_md_to_fts; from plantsim_mcp.storage.sqlite import SQLiteFTSIndex; cfg = load(); idx = SQLiteFTSIndex(cfg.paths.help_db); idx.__enter__(); idx.delete_all(); n = help_md_to_fts.build(list(cfg.paths.help_kb_roots), idx); print(f'indexed {n} docs'); idx.close()"
+plantsim-copilot-mcp init --non-interactive --kb-root ../kb_minimal --build
 ```
 
-A proper `build-kb` CLI will land in a follow-up commit.
+See [`../docs/kb-build-guide.md`](../docs/kb-build-guide.md) for the full wizard reference (interactive + flag-driven modes).
 
 ## Roadmap
 
-This package is being built incrementally; see [`../docs/roadmap.md`](../docs/roadmap.md). The v0.1 slice currently committed covers only `search_help`; the remaining tools (`get_api`, `find_method`, `find_callers`, `get_object_graph`, `search_code`, `validate_simtalk`) land in subsequent commits.
+v0.1.0 ships all seven planned MCP tools. v0.2 will lift retrieval quality (vector + hybrid rerank) and add `.psfm` write-back with mandatory citation auditing. See [`../docs/roadmap.md`](../docs/roadmap.md).

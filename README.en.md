@@ -11,7 +11,7 @@
 ![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![MCP](https://img.shields.io/badge/MCP-Server-8A2BE2?style=for-the-badge)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-pre--alpha-orange?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-v0.1.0-blue?style=for-the-badge)
 
 [Why This Exists](#-why-this-exists) · [What It Does](#-what-it-does) · [Quick Start](#-quick-start) · [Architecture](#-architecture-overview) · [Roadmap](./docs/roadmap.md)
 
@@ -46,7 +46,7 @@ Plant Simulation is one of the most widely used discrete-event factory simulatio
 
 ## 🚀 Quick Start
 
-> ⚠️ **Status: pre-alpha (v0.1 in progress).** Phase 1 — repository scaffolding — is complete; agents, skills, and the MCP server are being built. Track progress in the [Roadmap](./docs/roadmap.md).
+> ✅ **Status: v0.1.0 released.** Ships 7 MCP tools, 3 skills, 2 agents (orchestrator + citation reviewer); 122 unit tests + 30/30 eval green. See the [Roadmap](./docs/roadmap.md) for v0.2.
 
 **1. Clone to the recommended location**
 

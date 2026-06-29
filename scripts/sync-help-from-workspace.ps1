@@ -10,11 +10,12 @@
 
     `kb_local/` is gitignored, so the synced files never reach GitHub.
 
-    Default source is the author's OneDrive workspace; override with -Source.
+    Default source is taken from the `PLANTSIM_HELP_SOURCE` environment
+    variable; you can also pass `-Source` explicitly.
 
 .PARAMETER Source
-    Folder holding the converted markdown tree (recursive). Default is the
-    `pts_ai/knowledge_base/markdown/pts_help_2504` location.
+    Folder holding the converted markdown tree (recursive). If omitted,
+    falls back to `$env:PLANTSIM_HELP_SOURCE`.
 
 .PARAMETER Version
     PTS version label used for the destination subdir. Default: 2504.
@@ -24,8 +25,9 @@
     source (true mirror). Without it, the script is purely additive.
 
 .EXAMPLE
+    $env:PLANTSIM_HELP_SOURCE = 'D:\work\pts_help_2504_md'
     .\scripts\sync-help-from-workspace.ps1
-    Default sync (additive) from OneDrive workspace to kb_local\pts_help_2504\.
+    Additive sync from the env-var source to kb_local\pts_help_2504\.
 
 .EXAMPLE
     .\scripts\sync-help-from-workspace.ps1 -Version 2604 -Source "C:/work/pts_help_2604_md" -Mirror
@@ -36,12 +38,16 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$Source = "C:\Users\tao.j.10\Procter and Gamble\GC PD Modeling & Simulation - 文档\0_platform\plantsim\pts_ai\knowledge_base\markdown\pts_help_2504",
+    [string]$Source = $env:PLANTSIM_HELP_SOURCE,
     [string]$Version = "2504",
     [switch]$Mirror
 )
 
 $ErrorActionPreference = 'Stop'
+
+if ([string]::IsNullOrWhiteSpace($Source)) {
+    throw "Provide -Source <path> or set `$env:PLANTSIM_HELP_SOURCE to the converted markdown folder."
+}
 
 $repoRoot = (Resolve-Path "$PSScriptRoot\..").Path
 $dest = Join-Path $repoRoot "kb_local\pts_help_$Version"

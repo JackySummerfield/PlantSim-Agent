@@ -189,16 +189,16 @@ user: "Write a method that logs MU throughput per shift to a DataTable."
 ### W3 — Project query (reviewer checks file-ref anchor)
 
 ```
-user: "find all callers of InitPalletJackFleet in the open .psfm project"
+user: "find all callers of InitFleet in the open .psfm project"
    │
    ▼ orchestrator → project-analyst skill
    │
-   ▼ MCP: find_callers("InitPalletJackFleet")
-   │     → [{caller_file: "Init.yaml", caller_object: "Init", line_excerpt: "&InitPalletJackFleet.executeIn(0)"}]
+   ▼ MCP: find_callers("InitFleet")
+   │     → [{caller_file: "Init.yaml", caller_object: "Init", line_excerpt: "&InitFleet.executeIn(0)"}]
    │
    ▼ agent formulates answer + appends:
        **File References:**
-       - Init.yaml:42 — `&InitPalletJackFleet.executeIn(0)`
+       - Init.yaml:42 — `&InitFleet.executeIn(0)`
    │
    ▼ citation-reviewer subagent
    │     ├─ anchor `**File References:**` present?  ✓
@@ -265,4 +265,4 @@ These are not blockers for Phase 1 but should be settled during Phase 2:
 - **Markdown chunking granularity for FTS5** — by `##`, by `###`, or sliding-window? Affects recall vs precision.
 - **`.psfm` Program field SimTalk extraction** — full lexer too heavy for v0.1; use regex to extract method references (e.g. `&methodName.executeIn` patterns) plus identifier scan? Acceptable false-positive rate?
 - **Citation-reviewer fallback to LLM** — what trigger? Currently "anchor missing OR source text matches one of {common knowledge, obvious, ...}" — needs a small false-positive eval set.
-- **uvx availability in P&G network** — first-install behaviour to confirm; fall back to `pip install -e .` instructions if blocked.
+- **uvx availability in restricted corporate networks** — first-install behaviour to confirm; fall back to `pip install -e .` instructions if blocked.

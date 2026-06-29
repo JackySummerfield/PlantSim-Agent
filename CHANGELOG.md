@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_Nothing yet — v0.2 work tracked in [`docs/roadmap.md`](docs/roadmap.md)._
+
+## [0.1.0] - 2026-06-29
+
+First public release. Covers KB Q&A, SimTalk code authoring, and read-only `.psfm` project analysis with mandatory citation auditing.
+
 ### Added
 #### Phase 2 — W2 `.psfm` indexer + project tools (commit `e2b94f8`)
 - `plantsim_mcp.indexers.psfm_indexer` — walks `.psfm` folder, parses YAML object/method definitions, resolves `Origin` inheritance chains, extracts `flow_edges` from `Predecessor`/`Successor` references
@@ -67,7 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - `mcp/plantsim_mcp/server.py` — return type hints + docstrings updated for `get_api`/`find_method` dict shape
-- `mcp/scripts/smoke_psfm_kongming.py` — adapted to new dict return shapes; verified against real `TCDC_KongMing_PS2504.psfm` (25,463 objects, 7,698 edges, 4 real SimTalk lint issues found in `InitPalletJackFleet`)
+- `mcp/scripts/smoke_psfm.py` — parameterised via `$PLANTSIM_SMOKE_PROJECT` / CLI args (no hard-coded paths); adapted to new dict return shapes. Verified on a large logistics `.psfm` model (25,463 objects, 7,698 edges, 4 real SimTalk lint issues found).
 - Repository relocated out of OneDrive to `~/.copilot/plantsim-agent/` to avoid cloud-sync corruption of `.git/`
 - `.gitignore` rewritten: removed stale `pts_ai/` references; added `kb_local/*` rule
 

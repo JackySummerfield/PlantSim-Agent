@@ -2,7 +2,7 @@
 
 Thin wrapper around :meth:`ProjectStore.search_code`. Use this when
 ``find_method`` / ``find_callers`` are too name-specific and the user
-wants to grep, e.g. "every method that writes to PalletJackResults" or
+wants to grep, e.g. "every method that writes to ``FleetResults``" or
 "every method using ``str_to_obj``".
 """
 

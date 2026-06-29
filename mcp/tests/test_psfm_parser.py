@@ -11,8 +11,8 @@ from plantsim_mcp.indexers.psfm_parser import parse_project
 
 def test_parse_discovers_all_objects(sample_psfm: Path) -> None:
     result = parse_project(sample_psfm)
-    # 4 parent files (Station: $, PalletCapacity, Init, Buffer)
-    # + 2 model-level (Model $, InitPalletJackFleet)
+    # 4 parent files (Station: $, FleetCapacity, Init, Buffer)
+    # + 2 model-level (Model $, InitFleet)
     # + 4 instance docs (Frame, Variable, Init override, Buffer)
     # + 1 synthetic inline Method (Buffer.OnEntrance via $CustomAttributes)
     assert len(result.objects) == 11
@@ -49,7 +49,7 @@ def test_parse_harvests_program_bodies(sample_psfm: Path) -> None:
     by_uuid_body = {c.uuid: c.body for c in result.code_units}
 
     # Parent Method has body
-    assert "InitPalletJackFleet" in by_uuid_body["33333333-3333-3333-3333-333333333333"]
+    assert "InitFleet" in by_uuid_body["33333333-3333-3333-3333-333333333333"]
 
     # Top-level Model method has body
     assert "FleetNum" in by_uuid_body["55555555-5555-5555-5555-555555555555"]
