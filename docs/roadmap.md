@@ -56,6 +56,10 @@ Releases follow [Semantic Versioning](https://semver.org/). `v0.x` releases are 
 
 **Theme:** lift retrieval quality, tighten code validation, allow safe modifications.
 
+- [ ] **`list_section(file_path)` MCP tool** — enumerate all `[SimTalk]` sub-entries inside an indexed help file
+  - **Motivation:** v0.1 leaves a coverage gap for "list every API in *chapter X*" questions (e.g. *"What string functions does SimTalk provide?"*). `get_api` needs a name; `search_help` returns ranked snippets, not an exhaustive list. The agent's only recourse today is to bypass MCP and grep the raw markdown, which only works inside VS Code with the repo cloned — breaking the portability guarantee MCP exists to provide.
+  - **Shape:** `list_section(file_path: str, kind: str = "simtalk") → [{entry_name, section, line}]`. Backed by the existing `docs_meta.entry_name` column, no re-indexing required.
+  - **Acceptance:** Agent can answer *"List all string-manipulation functions"* using only MCP tool calls, with a `**Sources:**` block whose link targets are all verifiable against the index.
 - [ ] **Vector retrieval** via the existing `Index` abstraction
   - Candidate stacks: `sentence-transformers` + `sqlite-vec`, or `lancedb`
   - Hybrid mode: BM25 candidates → embedding rerank
