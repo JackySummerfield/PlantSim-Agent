@@ -63,9 +63,27 @@ cd $HOME/.copilot/plantsim-agent
 
 脚本会在 `~/.copilot/agents/` 和 `~/.copilot/skills/` 下创建 symlink 指向仓库内的源文件——这样你编辑仓库里的文件 VS Code 立即看到，不需要拷贝同步。Idempotent，`git pull` 后重跑即可。
 
-**3. 注册 MCP Server**（Phase 2 落地后说明）
+**3. 建索引** — 运行交互式向导
 
-**4. 重载 VS Code** (`Ctrl+Shift+P` → `Developer: Reload Window`)
+```powershell
+# 已 pip install 后用 console-script：
+plantsim-copilot-mcp init
+
+# 没装也行——从仓库直接跑：
+python scripts\build_kb.py
+```
+
+向导会问 4 件事：(1) markdown KB 根目录（默认带上 `kb_minimal/`，可加多个）；(2) 可选的 PTS Help fullmd 单文件源 + 要索引的章节；(3) 可选的默认 `.psfm` 项目；(4) 索引输出目录。结果写到 `~/.plantsim-agent/config.toml`，并可立即调用现有的索引器构建 `help.db` / `project.db`。
+
+CI / 冷装机器可走非交互模式：
+
+```powershell
+plantsim-copilot-mcp init --non-interactive --kb-root .\kb_minimal --build
+```
+
+**4. 注册 MCP Server**（Phase 2 落地后说明）
+
+**5. 重载 VS Code** (`Ctrl+Shift+P` → `Developer: Reload Window`)
 
 `PlantSim-Agent` 会出现在 Copilot Chat 的 agent 选择器里。
 

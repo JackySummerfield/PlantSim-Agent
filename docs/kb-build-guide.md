@@ -1,6 +1,6 @@
 # Building Your Local Knowledge Base
 
-> **Status:** stub for v0.1 Phase 1. The indexer scripts referenced here will land in Phase 2 (see [`roadmap.md`](./roadmap.md)). This page documents the **intended** workflow so users and contributors understand the contract.
+> **Status:** v0.1 — the interactive wizard (Option A) is implemented and tested. The PDF/CHM → markdown converter pipeline (Option B step 1) is still on the roadmap; for now, point the wizard at a markdown KB you already have on disk (see [`kb_minimal/`](../kb_minimal/) for the expected shape).
 
 ## Why you need to build the KB locally
 
@@ -10,49 +10,61 @@ Your KB never leaves your machine.
 
 ## What you need
 
-1. A licensed installation of **Tecnomatix Plant Simulation** (any 2024+ release).
-2. Either:
-   - the Plant Simulation **Help PDF** (typically downloadable from the Siemens Support Center), or
-   - the **CHM** file shipped with your install (`Plant Simulation X.chm` in the install directory).
+1. A licensed installation of **Tecnomatix Plant Simulation** (any 2024+ release) — only required if you want to index the official Help. The bundled `kb_minimal/` works without one.
+2. A **markdown** copy of whatever you want indexed. The wizard does **not** yet convert PDF/CHM for you; produce markdown using your preferred tool (`markitdown`, `marker`, etc. — see [`/memories/doc-conversion-lessons.md`](https://github.com/JackySummerfield/plantsim-agent/blob/main/docs/doc-conversion-lessons.md) for tips) or use the optional single-file **fullmd** path if you already have one.
 3. Python ≥ 3.10 with the project's MCP server installed (see [`installation.md`](./installation.md)).
 4. ~500 MB of free disk space (the markdown KB plus the SQLite index).
 
-## Workflow (v0.1 target)
+## Workflow
 
 ### Option A — interactive wizard (recommended)
 
 ```powershell
-plantsim-copilot-mcp build-kb
+# Console-script (after `pip install -e mcp/`):
+plantsim-copilot-mcp init
+
+# Or from a fresh clone, no install required:
+python scripts\build_kb.py
 ```
 
 The wizard will:
 
-1. Ask where your Help PDF / CHM lives.
-2. Convert it to markdown with [`markitdown`](https://github.com/microsoft/markitdown) (CPU-only, no GPU needed).
-3. Split the markdown by `##` / `###` headings.
-4. Load it into a SQLite FTS5 index at `~/.plantsim-agent/indices/help.db`.
-5. Write the resulting paths into `~/.plantsim-agent/config.toml` so the MCP server picks them up.
+1. Ask for one or more **markdown KB roots** (defaults to the bundled `kb_minimal/` if it can find it next to the package).
+2. Optionally ask for a **PTS Help fullmd source** (single `.md`) and which chapters to slice — defaults to `[11, 12, 13, 15]`.
+3. Optionally ask for a default **`.psfm` project folder** so `find_method` / `find_callers` / `get_object_graph` work out of the box.
+4. Pick an **index output directory** (default: `$PLANTSIM_AGENT_HOME/indices`, normally `~/.plantsim-agent/indices`).
+5. Write the resulting paths into `~/.plantsim-agent/config.toml`.
+6. Offer to run the indexers right away — produces `help.db` and (if a project was given) `project.db`.
 
-Expected duration on a typical laptop: 2–5 minutes for a full Help PDF (~5000 pages).
+Expected duration on a typical laptop: under a minute for `kb_minimal/`; ~1–3 minutes for a full chapter-sliced fullmd.
 
-### Option B — manual
+### Option A (non-interactive) — for CI, cold installs, automation
 
-If you prefer to control each step, run the indexers individually:
+Every prompt has a matching flag, so the same wizard drives unattended setup:
 
 ```powershell
-# 1. PDF → markdown
-python -m plantsim_mcp.indexers.help_pdf_to_md `
-    --input  "C:/path/to/PlantSimulationHelp.pdf" `
-    --output "C:/path/to/help_md"
+plantsim-copilot-mcp init `
+    --non-interactive `
+    --kb-root .\kb_minimal `
+    --kb-root C:\path\to\my_other_kb `
+    --fullmd-src C:\path\to\PTS_Help.md `
+    --chapters 11,12,13,15 `
+    --project C:\path\to\Model.psfm `
+    --index-dir $HOME\.plantsim-agent\indices `
+    --build
+```
 
-# 2. markdown → FTS5
+Add `--force` to overwrite an existing `config.toml` without the confirmation prompt, or `--config <path>` to write somewhere other than `$PLANTSIM_AGENT_HOME/config.toml`.
+
+### Option B — manual indexer invocation
+
+If you prefer to control each step (e.g. re-indexing without touching `config.toml`), run the indexers individually:
+
+```powershell
+# markdown → FTS5
 python -m plantsim_mcp.indexers.help_md_to_fts `
     --input  "C:/path/to/help_md" `
     --db     "$HOME/.plantsim-agent/indices/help.db"
-
-# 3. Tell the server where everything lives
-plantsim-copilot-mcp config set paths.help_kb_root "C:/path/to/help_md"
-plantsim-copilot-mcp config set paths.index_dir   "$HOME/.plantsim-agent/indices"
 ```
 
 ## What if I do not have the Help yet?

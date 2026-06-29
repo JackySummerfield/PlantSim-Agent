@@ -253,6 +253,7 @@ def main(argv: list[str] | None = None) -> int:
 
     Subcommands:
       * ``serve`` (default) — run the MCP server on stdio
+      * ``init`` — interactive wizard to write ``~/.plantsim-agent/config.toml``
       * ``build-kb [--root <md-dir>]`` — index a markdown KB
       * ``build-project --project <path>`` — index a ``.psfm`` folder
     """
@@ -260,6 +261,12 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="cmd")
 
     sub.add_parser("serve", help="run MCP server on stdio (default)")
+
+    # init wizard — registered in its own module so the implementation
+    # stays out of the server's import path.
+    from .build_kb_wizard import add_init_subparser
+
+    add_init_subparser(sub)
 
     bp = sub.add_parser("build-project", help="index a .psfm project folder")
     bp.add_argument(
@@ -291,6 +298,10 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     args = parser.parse_args(argv)
+    if args.cmd == "init":
+        from .build_kb_wizard import cmd_init
+
+        return cmd_init(args)
     if args.cmd == "build-project":
         return _cmd_build_project(args)
     if args.cmd == "build-kb":

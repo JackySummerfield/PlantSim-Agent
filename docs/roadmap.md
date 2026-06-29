@@ -40,7 +40,7 @@ Releases follow [Semantic Versioning](https://semver.org/). `v0.x` releases are 
 ### Phase 4 — Installation, evaluation, documentation
 - [x] `scripts/install.ps1` — symlink agents & skills into `~/.copilot/` (with Developer-Mode pre-check)
 - [ ] `scripts/install.sh` (Linux/macOS parity)
-- [ ] `scripts/build_kb.py` — interactive wizard: PDF path → MD → FTS5 → config write
+- [x] `plantsim-copilot-mcp init` wizard (+ `scripts/build_kb.py` shim) — interactive & `--non-interactive` modes; writes `config.toml`, optional `--build` invokes existing indexers
 - [ ] Evaluation set: 20 Q&A questions with hand-graded ground truth
 - [ ] Citation-reviewer recall test: 10 deliberately uncited responses
 - [ ] Cold-install test on a fresh VS Code profile

@@ -42,6 +42,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `agents/citation-reviewer.agent.md` — read-only subagent (`user-invocable: false`). Regex anchor checks per workflow (W1 `**Sources:**`, W2 `API Evidence Table`, W3 file-path links), forbidden-source phrase scan, Refuse-to-Guess discipline check. Returns a single JSON verdict (`ok` / `missing_citations` / `suspicious_citations` / `malformed_refusal`).
 - `agents/plantsim-copilot.agent.md` — user-facing orchestrator (`user-invocable: true`). Intent routing to the correct skill, mandatory citation-reviewer dispatch after every skilled reply, failure-mode escape hatches for missing indexes and refused answers. Tools: `search`, `edit`, `agent`, `plantsim-copilot-mcp/*`.
 
+#### Phase 4 — `init` wizard for KB build / config
+- `plantsim_mcp.build_kb_wizard` — interactive setup that gathers KB roots, optional PTS Help fullmd source + chapter list, default `.psfm` project, and index output directory, then writes `~/.plantsim-agent/config.toml` (hand-rolled TOML — stdlib `tomllib` is read-only)
+- New CLI subcommand `plantsim-copilot-mcp init` (registered alongside `serve` / `build-kb` / `build-project`). Supports `--non-interactive` with a full flag set (`--kb-root` repeatable, `--fullmd-src`, `--chapters`, `--project`, `--index-dir`, `--config`, `--force`, `--build`) so cold-install and CI can drive it unattended.
+- `scripts/build_kb.py` — repo-clone shim that imports the same wizard; runs without `pip install -e mcp/`.
+- 9 new tests in `tests/test_build_kb_wizard.py` covering TOML render/round-trip, `--non-interactive` minimal / full / custom-config-path / custom-index-dir / `--build` paths, and rejection of missing `--kb-root`. Test count: 110 → 119.
+- README quick-start updated; `docs/kb-build-guide.md` rewritten to document Option A (interactive + non-interactive) as the supported path.
+
 ### Changed
 - `mcp/plantsim_mcp/server.py` — return type hints + docstrings updated for `get_api`/`find_method` dict shape
 - `mcp/scripts/smoke_psfm_kongming.py` — adapted to new dict return shapes; verified against real `TCDC_KongMing_PS2504.psfm` (25,463 objects, 7,698 edges, 4 real SimTalk lint issues found in `InitPalletJackFleet`)
