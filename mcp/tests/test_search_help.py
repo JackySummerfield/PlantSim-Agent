@@ -22,7 +22,7 @@ def test_search_help_returns_serialisable_dicts(sample_kb: Path, tmp_path: Path)
     db_path.parent.mkdir()
     _build_index(sample_kb, db_path)
 
-    cfg = Config(paths=Paths(help_kb_root=sample_kb, index_dir=db_path.parent))
+    cfg = Config(paths=Paths(help_kb_roots=(sample_kb,), index_dir=db_path.parent))
     results = search_help("numMU", top_k=3, config=cfg)
 
     assert isinstance(results, list)
@@ -45,5 +45,5 @@ def test_search_help_top_k_zero_returns_empty(sample_kb: Path, tmp_path: Path) -
     db_path.parent.mkdir()
     _build_index(sample_kb, db_path)
 
-    cfg = Config(paths=Paths(help_kb_root=sample_kb, index_dir=db_path.parent))
+    cfg = Config(paths=Paths(help_kb_roots=(sample_kb,), index_dir=db_path.parent))
     assert search_help("numMU", top_k=0, config=cfg) == []

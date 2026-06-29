@@ -31,6 +31,24 @@ plantsim-copilot-mcp
 
 The server reads `~/.plantsim-agent/config.toml` for KB / index paths. You can point it elsewhere with the `PLANTSIM_AGENT_HOME` environment variable — useful for tests and dev setups.
 
+## Build the help index
+
+```toml
+# ~/.plantsim-agent/config.toml
+[paths]
+help_kb_roots = [
+    "C:/Users/me/.copilot/plantsim-agent/kb_minimal",
+    "C:/Users/me/.copilot/plantsim-agent/kb_local/pts_help_2504",
+]
+index_dir = "C:/Users/me/.plantsim-agent/indices"
+```
+
+```powershell
+python -c "from plantsim_mcp.config import load; from plantsim_mcp.indexers import help_md_to_fts; from plantsim_mcp.storage.sqlite import SQLiteFTSIndex; cfg = load(); idx = SQLiteFTSIndex(cfg.paths.help_db); idx.__enter__(); idx.delete_all(); n = help_md_to_fts.build(list(cfg.paths.help_kb_roots), idx); print(f'indexed {n} docs'); idx.close()"
+```
+
+A proper `build-kb` CLI will land in a follow-up commit.
+
 ## Roadmap
 
 This package is being built incrementally; see [`../docs/roadmap.md`](../docs/roadmap.md). The v0.1 slice currently committed covers only `search_help`; the remaining tools (`get_api`, `find_method`, `find_callers`, `get_object_graph`, `search_code`, `validate_simtalk`) land in subsequent commits.

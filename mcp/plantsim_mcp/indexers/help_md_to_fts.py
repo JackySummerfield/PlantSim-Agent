@@ -1,10 +1,11 @@
 """Walk a markdown tree, split by headings, write into an Index.
 
-This is the workhorse for W1 (Documentation Q&A): given a directory of
-``.md`` files (either the user's converted PTS Help or our own
-``kb_minimal/`` sample), produce one :class:`~plantsim_mcp.storage.base.Doc`
-per ``##`` / ``###`` section so the FTS5 search returns *section-grained*
-hits rather than whole-file hits.
+This is the workhorse for W1 (Documentation Q&A): given one or more
+directories of ``.md`` files (typically a mix of the bundled
+``kb_minimal/`` and a user's private ``kb_local/...``), produce one
+:class:`~plantsim_mcp.storage.base.Doc` per ``##`` / ``###`` section so
+the FTS5 search returns *section-grained* hits rather than whole-file
+hits.
 
 Splitting rules:
 
@@ -16,15 +17,17 @@ Splitting rules:
 * Fenced code blocks (``` ``` ```) are kept intact; a ``#`` inside a
   code block does **not** split a section.
 
-Doc ids are ``"<rel_path>#<section_slug>"`` with a numeric suffix added
-on collision; ids are stable across re-indexing as long as headings
-don't move.
+Doc ids are ``"<label>::<rel_path>#<section_slug>"`` with a numeric
+suffix added on collision. The ``label`` is the basename of the root
+directory by default (e.g. ``kb_minimal``, ``pts_help_2504``) so docs
+from different roots never collide; ids are stable across re-indexing
+as long as headings don't move.
 """
 
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from pathlib import Path
 
 from ..storage.base import Doc, Index
@@ -79,15 +82,23 @@ def _iter_sections(text: str) -> Iterator[tuple[str, str]]:
         yield current_title, body_text
 
 
-def iter_docs(root: Path) -> Iterator[Doc]:
+def iter_docs(root: Path, label: str | None = None) -> Iterator[Doc]:
     """Yield Doc records for every ``.md`` file under ``root``.
 
-    File paths in the produced docs are relative to ``root`` so the
-    index survives moves of the parent directory.
+    Parameters
+    ----------
+    root:
+        Directory to walk. Must exist.
+    label:
+        Stable short name embedded in each ``doc_id`` and stored as the
+        leading segment of ``file_path``. Defaults to ``root.name`` so
+        ``kb_minimal/Buffer.md`` and ``kb_local/pts_help_2504/Buffer.md``
+        never collide.
     """
     root = root.resolve()
     if not root.is_dir():
         raise FileNotFoundError(f"KB root does not exist or is not a directory: {root}")
+    eff_label = label or root.name
 
     for md_path in sorted(root.rglob("*.md")):
         rel = md_path.relative_to(root).as_posix()
@@ -95,7 +106,7 @@ def iter_docs(root: Path) -> Iterator[Doc]:
         seen_ids: dict[str, int] = {}
         for section, body in _iter_sections(text):
             slug = _slugify(section)
-            base_id = f"{rel}#{slug}"
+            base_id = f"{eff_label}::{rel}#{slug}"
             collisions = seen_ids.get(base_id, 0)
             seen_ids[base_id] = collisions + 1
             doc_id = base_id if collisions == 0 else f"{base_id}-{collisions + 1}"
@@ -103,16 +114,45 @@ def iter_docs(root: Path) -> Iterator[Doc]:
                 continue
             yield Doc(
                 doc_id=doc_id,
-                file_path=rel,
+                file_path=f"{eff_label}/{rel}",
                 section=section,
                 content=body,
             )
 
 
-def build(root: Path, index: Index) -> int:
-    """Index every markdown file under ``root`` into ``index``.
+def iter_docs_multi(roots: Iterable[Path | tuple[str, Path]]) -> Iterator[Doc]:
+    """Yield Doc records aggregated across multiple roots.
+
+    Each entry in ``roots`` is either a :class:`~pathlib.Path` (label
+    defaults to ``path.name``) or a ``(label, path)`` tuple. Roots that
+    do not exist are silently skipped with no error — this is what
+    enables shipping ``kb_minimal/`` plus an optional ``kb_local/...``
+    without forcing every user to populate the latter.
+    """
+    for entry in roots:
+        if isinstance(entry, tuple):
+            label, root = entry
+        else:
+            label, root = entry.name, entry
+        root = Path(root)
+        if not root.is_dir():
+            continue
+        yield from iter_docs(root, label=label)
+
+
+def build(
+    roots: Path | Iterable[Path | tuple[str, Path]],
+    index: Index,
+) -> int:
+    """Index markdown files into ``index``.
+
+    ``roots`` may be a single :class:`~pathlib.Path` (back-compat with
+    the v0.1 single-root API) or an iterable of paths / ``(label, path)``
+    pairs (multi-root aggregation).
 
     Returns the number of docs written. Caller is responsible for
     opening / closing the index (use ``with index:`` for the common case).
     """
-    return index.add_docs(iter_docs(root))
+    if isinstance(roots, Path):
+        return index.add_docs(iter_docs(roots))
+    return index.add_docs(iter_docs_multi(roots))
