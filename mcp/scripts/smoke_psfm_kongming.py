@@ -55,8 +55,12 @@ def main() -> int:
             print(f"  skipped: {path}  ({err})")
 
     print("\n=== find_method('InitPalletJackFleet')")
-    for h in find_method("InitPalletJackFleet", config=cfg)[:6]:
-        print(f"  [{h['role']:<10}] {h['uuid'][:8]}  {h['file_path']}")
+    fm = find_method("InitPalletJackFleet", config=cfg)
+    if fm["hits"]:
+        for h in fm["hits"][:6]:
+            print(f"  [{h['role']:<10}] {h['uuid'][:8]}  {h['file_path']}")
+    else:
+        print(f"  no hits — did_you_mean: {fm['did_you_mean']}")
 
     print("\n=== find_callers('PalletJackResults')")
     for h in find_callers("PalletJackResults", top_k=5, config=cfg):
@@ -80,7 +84,8 @@ def main() -> int:
         print("  not found")
 
     print("\n=== validate_simtalk(uuid=InitPalletJackFleet)")
-    init_hits = find_method("InitPalletJackFleet", config=cfg)
+    init_result = find_method("InitPalletJackFleet", config=cfg)
+    init_hits = init_result["hits"]
     if init_hits:
         init_uuid = init_hits[0]["uuid"]
         try:

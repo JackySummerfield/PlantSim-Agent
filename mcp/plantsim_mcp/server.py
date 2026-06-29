@@ -54,11 +54,15 @@ def build_server(config: Config | None = None) -> Any:
     @mcp.tool()
     def find_method(
         name: str, include_overrides: bool = True
-    ) -> list[dict[str, Any]]:
+    ) -> dict[str, Any]:
         """Find a SimTalk Method by name in the indexed .psfm project.
 
-        Returns the parent definition plus any overriding children
+        Returns a dict ``{"query", "hits", "did_you_mean"}``. ``hits``
+        contains the parent definition plus any overriding children
         (so the caller can audit inheritance impact before editing).
+        When ``hits`` is empty, ``did_you_mean`` carries up to 5 nearby
+        method names from the project so the agent can retry without
+        guessing.
 
         Args:
             name: Method's Name field (case-sensitive).
@@ -123,15 +127,19 @@ def build_server(config: Config | None = None) -> Any:
         )
 
     @mcp.tool()
-    def get_api(name: str, top_k: int = 5) -> list[dict[str, Any]]:
+    def get_api(name: str, top_k: int = 5) -> dict[str, Any]:
         """Precise SimTalk API lookup against the help KB.
 
-        Returns help-doc sections titled "<Name> [SimTalk]" (with any
-        disambiguator suffix). For natural-language questions use
-        search_help instead.
+        Returns a dict ``{"query", "hits", "did_you_mean"}``. ``hits``
+        contains help-doc sections titled "<Name> [SimTalk]" (with any
+        disambiguator suffix). When ``hits`` is empty, ``did_you_mean``
+        carries up to 5 nearby entry names (prefix + fuzzy) so the
+        agent can retry without falling back to training-data guesses.
+        For free-text natural-language questions use ``search_help``
+        instead.
 
         Args:
-            name: SimTalk identifier (case-sensitive).
+            name: SimTalk identifier (case-insensitive).
             top_k: Maximum entries to return (default 5).
         """
         return _get_api.get_api(name=name, top_k=top_k, config=cfg)

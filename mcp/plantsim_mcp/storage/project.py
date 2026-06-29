@@ -291,6 +291,84 @@ class ProjectStore:
         )
         return [_row(r) for r in cur.fetchall()]
 
+    def suggest_object_names(
+        self,
+        query: str,
+        class_type: str | None = None,
+        limit: int = 5,
+    ) -> list[str]:
+        """Return up to ``limit`` object names similar to ``query``.
+
+        Two-stage: prefix LIKE first, then ``difflib.get_close_matches``
+        over the full distinct-name list. Optionally restricted to a
+        single ``class_type`` (e.g. ``"Method"`` for
+        :func:`~plantsim_mcp.tools.find_method.find_method`).
+        """
+        if not query.strip() or limit <= 0:
+            return []
+        conn = self._conn_req()
+
+        # Stage 1: prefix (skip exact-equal matches)
+        if class_type:
+            cur = conn.execute(
+                """
+                SELECT DISTINCT name FROM objects
+                WHERE name LIKE ? COLLATE NOCASE
+                  AND name <> ? COLLATE NOCASE
+                  AND class_type = ?
+                ORDER BY length(name), name
+                LIMIT ?
+                """,
+                (f"{query}%", query, class_type, limit),
+            )
+        else:
+            cur = conn.execute(
+                """
+                SELECT DISTINCT name FROM objects
+                WHERE name LIKE ? COLLATE NOCASE
+                  AND name <> ? COLLATE NOCASE
+                ORDER BY length(name), name
+                LIMIT ?
+                """,
+                (f"{query}%", query, limit),
+            )
+        out: list[str] = [r[0] for r in cur.fetchall()]
+        if len(out) >= limit:
+            return out
+
+        # Stage 2: fuzzy via difflib
+        from difflib import get_close_matches
+
+        if class_type:
+            corpus = [
+                r[0]
+                for r in conn.execute(
+                    "SELECT DISTINCT name FROM objects WHERE class_type = ?",
+                    (class_type,),
+                ).fetchall()
+            ]
+        else:
+            corpus = [
+                r[0]
+                for r in conn.execute("SELECT DISTINCT name FROM objects").fetchall()
+            ]
+        lower_to_orig: dict[str, str] = {}
+        for n in corpus:
+            lower_to_orig.setdefault(n.lower(), n)
+        close = get_close_matches(
+            query.lower(), list(lower_to_orig.keys()), n=limit * 2, cutoff=0.6
+        )
+        seen = {n.lower() for n in out}
+        for c in close:
+            orig = lower_to_orig[c]
+            if orig.lower() in seen:
+                continue
+            out.append(orig)
+            seen.add(orig.lower())
+            if len(out) >= limit:
+                break
+        return out[:limit]
+
     def search_code(
         self, query: str, top_k: int = 20
     ) -> list[tuple[ObjectRow, str, float]]:

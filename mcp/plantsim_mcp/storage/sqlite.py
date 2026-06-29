@@ -284,3 +284,68 @@ class SQLiteFTSIndex(Index):
             if len(out) >= top_k:
                 break
         return out
+
+    def suggest_entry_names(self, query: str, limit: int = 5) -> list[str]:
+        """Return up to ``limit`` entry names similar to ``query``.
+
+        Two-stage suggestion:
+
+        1. **Prefix match** on ``entry_name`` (case-insensitive). Catches
+           common typos at the tail (``Stop`` → ``StopAtDestination``).
+        2. **Fuzzy match** via :func:`difflib.get_close_matches` over the
+           full distinct-name list. Catches mid-string typos
+           (``Stoped`` → ``Stop``).
+
+        Returns an empty list when the index has no ``entry_name`` data
+        (i.e. pre-W3.1 indices that only ran the legacy prose indexer).
+        """
+        if not query.strip() or limit <= 0:
+            return []
+        conn = self._require_conn()
+
+        # Stage 1: prefix (skip exact-equal matches; those are real hits,
+        # not suggestions).
+        cur = conn.execute(
+            """
+            SELECT DISTINCT entry_name FROM docs_meta
+            WHERE entry_name LIKE ? COLLATE NOCASE
+              AND entry_name <> ? COLLATE NOCASE
+              AND entry_name IS NOT NULL
+            ORDER BY length(entry_name), entry_name
+            LIMIT ?
+            """,
+            (f"{query}%", query, limit),
+        )
+        out: list[str] = [r[0] for r in cur.fetchall()]
+        if len(out) >= limit:
+            return out
+
+        # Stage 2: fuzzy. Pull the full distinct-name list (typically a
+        # few thousand short strings → cheap to scan with difflib).
+        from difflib import get_close_matches
+
+        all_names = [
+            r[0]
+            for r in conn.execute(
+                "SELECT DISTINCT entry_name FROM docs_meta "
+                "WHERE entry_name IS NOT NULL"
+            ).fetchall()
+        ]
+        # Case-insensitive: lowercase the corpus, keep a map back to the
+        # original casing.
+        lower_to_orig: dict[str, str] = {}
+        for n in all_names:
+            lower_to_orig.setdefault(n.lower(), n)
+        close = get_close_matches(
+            query.lower(), list(lower_to_orig.keys()), n=limit * 2, cutoff=0.6
+        )
+        seen = {n.lower() for n in out}
+        for c in close:
+            orig = lower_to_orig[c]
+            if orig.lower() in seen:
+                continue
+            out.append(orig)
+            seen.add(orig.lower())
+            if len(out) >= limit:
+                break
+        return out[:limit]

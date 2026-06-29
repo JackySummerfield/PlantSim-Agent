@@ -132,7 +132,10 @@ def indexed_project(tmp_path: Path, sample_psfm: Path) -> Config:
 
 
 def test_find_method_returns_definition_and_overrides(indexed_project: Config) -> None:
-    hits = find_method.find_method("Init", config=indexed_project)
+    result = find_method.find_method("Init", config=indexed_project)
+    assert result["query"] == "Init"
+    assert result["did_you_mean"] == []  # exact match, no suggestions
+    hits = result["hits"]
     by_role = {h["role"]: h for h in hits}
     # Definition (the parent Method)
     assert by_role["definition"]["uuid"] == "33333333-3333-3333-3333-333333333333"
@@ -145,15 +148,36 @@ def test_find_method_returns_definition_and_overrides(indexed_project: Config) -
 
 
 def test_find_method_without_overrides(indexed_project: Config) -> None:
-    hits = find_method.find_method(
+    result = find_method.find_method(
         "Init", include_overrides=False, config=indexed_project
     )
+    hits = result["hits"]
     assert len(hits) == 1
     assert hits[0]["role"] == "definition"
 
 
 def test_find_method_unknown_returns_empty(indexed_project: Config) -> None:
-    assert find_method.find_method("Nope", config=indexed_project) == []
+    result = find_method.find_method("Nope", config=indexed_project)
+    assert result["hits"] == []
+    # "Nope" is too far from "Init" / "InitPalletJackFleet" → empty.
+    # We don't assert content, just shape — the suggester is best-effort.
+    assert isinstance(result["did_you_mean"], list)
+
+
+def test_find_method_suggests_on_typo(indexed_project: Config) -> None:
+    # "Innit" should fuzzy-match "Init"
+    result = find_method.find_method("Innit", config=indexed_project)
+    assert result["hits"] == []
+    assert "Init" in result["did_you_mean"]
+
+
+def test_find_method_suggests_on_prefix(indexed_project: Config) -> None:
+    # "In" should prefix-match Init and InitPalletJackFleet
+    result = find_method.find_method("In", config=indexed_project)
+    assert result["hits"] == []
+    suggestions = result["did_you_mean"]
+    assert "Init" in suggestions
+    assert "InitPalletJackFleet" in suggestions
 
 
 def test_find_callers_finds_references(indexed_project: Config) -> None:

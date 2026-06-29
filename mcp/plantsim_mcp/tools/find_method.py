@@ -6,6 +6,10 @@ key inheritance-awareness feature: when the user asks "where is
 ``InitPalletJackFleet``?", they should see (a) the parent definition
 they can edit, and (b) the children that override it, because those
 children will *not* pick up the parent's changes.
+
+When no method matches exactly, ``did_you_mean`` carries up to 5
+nearby Method names (prefix + fuzzy), so the calling LLM can retry
+without falling back to training-data guesses.
 """
 
 from __future__ import annotations
@@ -33,7 +37,7 @@ def find_method(
     name: str,
     include_overrides: bool = True,
     config: Config | None = None,
-) -> list[dict[str, Any]]:
+) -> dict[str, Any]:
     """Find every Method named ``name`` and (optionally) its overriding children.
 
     Parameters
@@ -48,11 +52,16 @@ def find_method(
 
     Returns
     -------
-    list of dict
-        One entry per match. Each carries ``role`` = ``"definition"``
-        (the matching method) or ``"override"`` (a child that overrides
-        it). Overrides include ``parent_uuid`` so the agent can show
-        the inheritance link explicitly.
+    dict
+        ``{"query": str, "hits": list[dict], "did_you_mean": list[str]}``.
+
+        Each ``hits`` entry carries ``role`` = ``"definition"`` (the
+        matching method) or ``"override"`` (a child that overrides it).
+        Overrides include ``parent_uuid`` so the agent can show the
+        inheritance link explicitly.
+
+        ``did_you_mean`` is populated **only when** ``hits`` is empty —
+        up to 5 nearby Method names from the project store.
 
     Raises
     ------
@@ -60,7 +69,7 @@ def find_method(
         If the project index has not been built.
     """
     if not name.strip():
-        return []
+        return {"query": name, "hits": [], "did_you_mean": []}
 
     with open_project_store(config) as store:
         all_matches = store.find_by_name(name, class_type="Method")
@@ -77,15 +86,26 @@ def find_method(
                     continue
             defs.append(m)
 
-        out: list[dict[str, Any]] = []
+        hits: list[dict[str, Any]] = []
         for d in defs:
             payload = _row_to_dict(d)
             payload["role"] = "definition"
-            out.append(payload)
+            hits.append(payload)
             if include_overrides:
                 for child in store.children_of(d.uuid):
                     payload_c = _row_to_dict(child)
                     payload_c["role"] = "override"
                     payload_c["parent_uuid"] = d.uuid
-                    out.append(payload_c)
-    return out
+                    hits.append(payload_c)
+
+        suggestions: list[str] = []
+        if not hits:
+            suggestions = store.suggest_object_names(
+                name, class_type="Method", limit=5
+            )
+
+    return {
+        "query": name,
+        "hits": hits,
+        "did_you_mean": suggestions,
+    }
