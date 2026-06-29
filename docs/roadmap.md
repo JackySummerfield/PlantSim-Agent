@@ -41,8 +41,8 @@ Releases follow [Semantic Versioning](https://semver.org/). `v0.x` releases are 
 - [x] `scripts/install.ps1` — symlink agents & skills into `~/.copilot/` (with Developer-Mode pre-check)
 - [ ] `scripts/install.sh` (Linux/macOS parity)
 - [x] `plantsim-copilot-mcp init` wizard (+ `scripts/build_kb.py` shim) — interactive & `--non-interactive` modes; writes `config.toml`, optional `--build` invokes existing indexers
-- [ ] Evaluation set: 20 Q&A questions with hand-graded ground truth
-- [ ] Citation-reviewer recall test: 10 deliberately uncited responses
+- [x] Evaluation set: 20 Q&A questions with hand-graded ground truth (`tests/eval/qa_questions.yaml`, all 20 passing against `kb_minimal/`)
+- [x] Citation-reviewer recall test: 10 deliberately uncited responses (`tests/eval/citation_recall.yaml`, all 10 passing against pure-Python regex port)
 - [ ] Cold-install test on a fresh VS Code profile
 
 ### Phase 5 — Public release

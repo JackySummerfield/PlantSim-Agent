@@ -49,6 +49,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 9 new tests in `tests/test_build_kb_wizard.py` covering TOML render/round-trip, `--non-interactive` minimal / full / custom-config-path / custom-index-dir / `--build` paths, and rejection of missing `--kb-root`. Test count: 110 → 119.
 - README quick-start updated; `docs/kb-build-guide.md` rewritten to document Option A (interactive + non-interactive) as the supported path.
 
+#### Phase 4 — Evaluation suites
+- `tests/eval/qa_questions.yaml` — 20 hand-written natural-language questions; each entry pins the expected `file_path` (and optionally `section`) substrings that the underlying MCP tool must surface in the top-K hits. All 20 pass against an isolated index built from `kb_minimal/`.
+- `tests/eval/citation_recall.yaml` — 10 fixture response bodies covering the four reviewer verdicts across W1 / W2 / W3 workflows (anchor-OK / missing / suspicious-phrase / malformed-refusal).
+- `tests/eval/run_eval.py` — pure-Python runner. (1) Builds an isolated `help.db` from `kb_minimal/`, then calls `search_help` / `get_api` directly and scores recall. (2) Implements the citation-reviewer's regex contract in `review()` and grades each fixture. Importable so tests can call `run_qa_suite()` / `run_citation_suite()` and assert.
+- `tests/eval/test_eval_pytest.py` + `tests/eval/conftest.py` — opt-in pytest wrapper gated on `--run-eval`. The unit-test suite (`pytest mcp/`) stays at 119 passing and is unaffected.
+- Current score: **20/20 QA + 10/10 citation = 30/30 green**.
+
 ### Changed
 - `mcp/plantsim_mcp/server.py` — return type hints + docstrings updated for `get_api`/`find_method` dict shape
 - `mcp/scripts/smoke_psfm_kongming.py` — adapted to new dict return shapes; verified against real `TCDC_KongMing_PS2504.psfm` (25,463 objects, 7,698 edges, 4 real SimTalk lint issues found in `InitPalletJackFleet`)

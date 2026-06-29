@@ -1,0 +1,129 @@
+# PlantSim-Agent citation-reviewer recall fixtures (Phase 4 #2)
+#
+# Each fixture is a response body that the runner feeds to a pure-Python
+# port of the citation-reviewer's regex contract (see
+# agents/citation-reviewer.agent.md). The runner asserts that the verdict
+# matches `expected.status`.
+#
+# Status taxonomy:
+#   ok                    — anchor present, no forbidden phrases, no malformed refusal
+#   missing_citations     — required anchor for the declared workflow is absent
+#   suspicious_citations  — anchor present but contains a forbidden-source phrase
+#   malformed_refusal     — "❌ Cannot verify:" line without the required cascade trace
+#
+# The runner uses these to verify the reviewer's regex contract directly,
+# without spinning up the actual LLM-backed subagent.
+
+- id: c01-w1-ok
+  workflow: W1
+  expected: { status: ok }
+  body: |
+    The Buffer's capacity is set via the `Capacity` attribute.
+
+    **Sources:**
+    - [kb_minimal/simtalk-api-index.md](kb_minimal/simtalk-api-index.md#Buffer)
+
+- id: c02-w1-missing-anchor
+  workflow: W1
+  expected: { status: missing_citations }
+  body: |
+    The Buffer's capacity is set via the Capacity attribute. This is
+    well-known to anyone familiar with Plant Simulation.
+
+- id: c03-w1-no-bullet-after-sources
+  workflow: W1
+  expected: { status: missing_citations }
+  body: |
+    The Buffer's capacity is set via the `Capacity` attribute.
+
+    **Sources:**
+    See the documentation for details.
+
+- id: c04-w2-ok
+  workflow: W2
+  expected: { status: ok }
+  body: |
+    Here is a method that pauses a station and reports it:
+
+    ```simtalk
+    Station1.startPause
+    print Station1.Pause
+    ```
+
+    **API Evidence Table**
+
+    | Symbol | Kind | Source |
+    |---|---|---|
+    | Station.startPause | method | kb_minimal/simtalk-api-index.md#Station |
+    | Station.Pause | attribute | kb_minimal/simtalk-api-index.md#Station |
+
+- id: c05-w2-suspicious-common-knowledge
+  workflow: W2
+  expected: { status: suspicious_citations }
+  body: |
+    ```simtalk
+    Station1.MU.move(Station2)
+    ```
+
+    **API Evidence Table**
+
+    | Symbol | Kind | Source |
+    |---|---|---|
+    | .move(target) | method | common knowledge |
+
+- id: c06-w2-suspicious-training-data
+  workflow: W2
+  expected: { status: suspicious_citations }
+  body: |
+    ```simtalk
+    var x := pow(2, 10)
+    ```
+
+    **API Evidence Table**
+
+    | Symbol | Kind | Source |
+    |---|---|---|
+    | pow | function | from training data |
+
+- id: c07-w2-missing-table
+  workflow: W2
+  expected: { status: missing_citations }
+  body: |
+    Here is a one-liner:
+
+    ```simtalk
+    print "hello"
+    ```
+
+    Trust me — this is a basic SimTalk statement.
+
+- id: c08-w3-ok-inline-links
+  workflow: W3
+  expected: { status: ok }
+  body: |
+    `InitPalletJackFleet` is defined in [MaterialFlow/AGV/InitPalletJackFleet.simtalk](MaterialFlow/AGV/InitPalletJackFleet.simtalk)
+    and is called from [Models/Main/init.simtalk](Models/Main/init.simtalk).
+
+- id: c09-w3-missing-path-links
+  workflow: W3
+  expected: { status: missing_citations }
+  body: |
+    `InitPalletJackFleet` lives in the AGV frame and is called at model init.
+    See the documentation for the calling convention.
+
+- id: c10-w2-malformed-refusal
+  workflow: W2
+  expected: { status: malformed_refusal }
+  body: |
+    ```simtalk
+    var ok := Station1.MU.move(Buffer1)
+    ```
+
+    ❌ Cannot verify: the exact return type of `.move()` on a failed
+    routing call.
+
+    **API Evidence Table**
+
+    | Symbol | Kind | Source |
+    |---|---|---|
+    | .move(target) | method | kb_minimal/simtalk-api-index.md#Station |

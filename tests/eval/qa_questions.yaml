@@ -1,0 +1,172 @@
+# PlantSim-Agent QA evaluation set (Phase 4 #2)
+#
+# Hand-graded queries that the underlying MCP tools must satisfy when the
+# index is built from the bundled `kb_minimal/` corpus alone. No LLM is in
+# the loop — the runner calls each tool directly and asserts that the
+# expected file_path (and, when given, a section substring) appears among
+# the top_k hits.
+#
+# Schema
+# ------
+#   id            short stable id
+#   query         human-readable description of the question
+#   tool          one of: search_help | get_api
+#   args          tool keyword args
+#   top_k         results to fetch (default 5)
+#   expected:     list of expected hits — each has:
+#       file_contains       substring that hit.file_path must contain
+#       section_contains    (optional) substring that hit.section must contain
+#   min_match     how many of the expected entries must be matched (default = len(expected))
+#
+# Notes:
+#  * Some queries deliberately use get_api (precise lookup) and others
+#    search_help (FTS) — the eval verifies both paths.
+#  * Every expected file_path lives inside kb_minimal/ so this set
+#    works without a licensed PTS Help on disk.
+
+- id: q01-buffer-capacity
+  query: How do I set a Buffer's capacity in SimTalk?
+  tool: search_help
+  args: { query: "NumMU Capacity max MUs" }
+  expected:
+    - file_contains: simtalk-api-index.md
+      section_contains: Buffer
+
+- id: q02-eventcontroller-start
+  query: Which method starts the EventController?
+  tool: search_help
+  args: { query: "start sim stop reset model" }
+  expected:
+    - file_contains: simtalk-api-index.md
+      section_contains: EventController
+
+- id: q03-mu-move-check
+  query: How should I check that .move() succeeded?
+  tool: search_help
+  args: { query: "check move success boolean" }
+  expected:
+    - file_contains: modeling-standards.md
+
+- id: q04-simtalk-switch
+  query: Should I use switch or cascading if/elseif in SimTalk?
+  tool: search_help
+  args: { query: "switch performance readability" }
+  expected:
+    - file_contains: modeling-standards.md
+
+- id: q05-loop-variable-declaration
+  query: How do I declare a loop variable locally?
+  tool: search_help
+  args: { query: "loop variables locally" }
+  expected:
+    - file_contains: modeling-standards.md
+
+- id: q06-station-occupancy
+  query: Which Station attribute tells me if it is occupied?
+  tool: search_help
+  args: { query: "Station Occupied empty attribute" }
+  expected:
+    - file_contains: simtalk-api-index.md
+      section_contains: Station
+
+- id: q07-station-pause
+  query: How do I pause a Station from SimTalk?
+  tool: search_help
+  args: { query: "Station startPause stopPause" }
+  expected:
+    - file_contains: simtalk-api-index.md
+      section_contains: Station
+
+- id: q08-buffer-type-queue-stack
+  query: What is the difference between Queue and Stack Buffer types?
+  tool: search_help
+  args: { query: "BufferType Queue FIFO Stack LIFO" }
+  expected:
+    - file_contains: simtalk-api-index.md
+      section_contains: Buffer
+
+- id: q09-simtalk-comments
+  query: How do I write a multi-line comment in SimTalk?
+  tool: search_help
+  args: { query: "multi line comment single" }
+  expected:
+    - file_contains: simtalk-syntax-quick-ref.md
+
+- id: q10-simtalk-types
+  query: What are the common SimTalk data types?
+  tool: search_help
+  args: { query: "integer real string boolean object" }
+  expected:
+    - file_contains: simtalk-syntax-quick-ref.md
+
+- id: q11-string-concatenation
+  query: How do I concatenate strings in SimTalk?
+  tool: search_help
+  args: { query: "concatenation strLPos strRPos" }
+  expected:
+    - file_contains: simtalk-syntax-quick-ref.md
+
+- id: q12-not-equal-operator
+  query: What is the not-equal operator in SimTalk?
+  tool: search_help
+  args: { query: "and or not" }
+  expected:
+    - file_contains: simtalk-syntax-quick-ref.md
+
+- id: q13-if-elseif-else-syntax
+  query: Show me an if/elseif/else block in SimTalk.
+  tool: search_help
+  args: { query: "if elseif else end block" }
+  expected:
+    - file_contains: simtalk-syntax-quick-ref.md
+
+- id: q14-debug-discipline
+  query: How should the else branch of a switch behave?
+  tool: search_help
+  args: { query: "switch default else debug fail gracefully" }
+  expected:
+    - file_contains: modeling-standards.md
+
+- id: q15-config-tables
+  query: Where should model inputs live?
+  tool: search_help
+  args: { query: "configuration tables hardcoded scaling" }
+  expected:
+    - file_contains: modeling-standards.md
+
+- id: q16-waituntil-pattern
+  query: How do I correctly use waituntil with an expression?
+  tool: search_help
+  args: { query: "waituntil local variable cont" }
+  expected:
+    - file_contains: modeling-standards.md
+
+- id: q17-eventcontroller-callbacks
+  query: Which callbacks does the EventController invoke?
+  tool: search_help
+  args: { query: "init endSim auto-called" }
+  expected:
+    - file_contains: simtalk-api-index.md
+      section_contains: EventController
+
+- id: q18-station-sensor-controls
+  query: Which sensor control hooks does Station expose?
+  tool: search_help
+  args: { query: "Station entranceControl exitControl pullControl" }
+  expected:
+    - file_contains: simtalk-api-index.md
+      section_contains: Station
+
+- id: q19-knowledge-base-overview
+  query: What is in the PlantSim-Agent local knowledge base?
+  tool: search_help
+  args: { query: "sample KB" }
+  expected:
+    - file_contains: kb_minimal
+
+- id: q20-debug-print-cleanup
+  query: Should debug print statements ship with the delivered model?
+  tool: search_help
+  args: { query: "remove debug print before delivery" }
+  expected:
+    - file_contains: modeling-standards.md
