@@ -9,14 +9,21 @@ Schema::
     CREATE TABLE docs_meta (
         doc_id     TEXT PRIMARY KEY,
         file_path  TEXT NOT NULL,
-        section    TEXT NOT NULL
+        section    TEXT NOT NULL,
+        entry_name TEXT          -- nullable; canonical API/UI entry name
     );
+    CREATE INDEX idx_meta_entry_name ON docs_meta(entry_name COLLATE NOCASE);
 
     CREATE VIRTUAL TABLE docs_fts USING fts5(
         doc_id     UNINDEXED,
         content,
         tokenize = 'unicode61 remove_diacritics 2'
     );
+
+The ``entry_name`` column (added in W3.1) lets the fullmd indexer
+record the canonical entry name (e.g. ``"Stop"`` for section
+``"Stop [SimTalk] - Source"``) for exact-match lookups that bypass
+both FTS tokenisation and the LIKE prefix's `[SimTalk]`-only bias.
 
 FTS5 ships with stdlib SQLite on every supported Windows / macOS / Linux
 Python build, so no extension loading is required.
@@ -34,7 +41,8 @@ _SCHEMA = """
 CREATE TABLE IF NOT EXISTS docs_meta (
     doc_id     TEXT PRIMARY KEY,
     file_path  TEXT NOT NULL,
-    section    TEXT NOT NULL
+    section    TEXT NOT NULL,
+    entry_name TEXT
 );
 
 CREATE VIRTUAL TABLE IF NOT EXISTS docs_fts USING fts5(
@@ -43,6 +51,25 @@ CREATE VIRTUAL TABLE IF NOT EXISTS docs_fts USING fts5(
     tokenize = 'unicode61 remove_diacritics 2'
 );
 """
+
+
+def _migrate_add_entry_name(conn: sqlite3.Connection) -> None:
+    """Ensure ``docs_meta.entry_name`` column + its index exist.
+
+    Older indices (pre-W3.1) created ``docs_meta`` without the column;
+    SQLite's ``ALTER TABLE ADD COLUMN`` is cheap and non-destructive.
+    The index is created here (rather than in ``_SCHEMA``) because the
+    ``CREATE INDEX`` would reference a non-existent column on a legacy
+    DB if it ran before the ``ALTER TABLE``.
+    """
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(docs_meta)").fetchall()}
+    if "entry_name" not in cols:
+        conn.execute("ALTER TABLE docs_meta ADD COLUMN entry_name TEXT")
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_meta_entry_name "
+        "ON docs_meta(entry_name COLLATE NOCASE)"
+    )
+    conn.commit()
 
 
 def _escape_fts(query: str) -> str:
@@ -85,6 +112,7 @@ class SQLiteFTSIndex(Index):
             Path(self._db_path).parent.mkdir(parents=True, exist_ok=True)
         self._conn = sqlite3.connect(self._db_path)
         self._conn.executescript(_SCHEMA)
+        _migrate_add_entry_name(self._conn)
         self._conn.commit()
 
     def close(self) -> None:
@@ -109,8 +137,9 @@ class SQLiteFTSIndex(Index):
         cur = conn.cursor()
         # Replace-on-conflict semantics for stable doc_ids
         cur.executemany(
-            "INSERT OR REPLACE INTO docs_meta(doc_id, file_path, section) VALUES (?, ?, ?)",
-            [(d.doc_id, d.file_path, d.section) for d in rows],
+            "INSERT OR REPLACE INTO docs_meta(doc_id, file_path, section, entry_name) "
+            "VALUES (?, ?, ?, ?)",
+            [(d.doc_id, d.file_path, d.section, d.entry_name) for d in rows],
         )
         # FTS5 has no upsert; delete-then-insert keyed on doc_id.
         cur.executemany(
@@ -171,23 +200,62 @@ class SQLiteFTSIndex(Index):
         return conn.execute("SELECT COUNT(*) FROM docs_meta").fetchone()[0]
 
     def find_by_section(self, name: str, top_k: int = 10) -> list[Hit]:
-        """Find docs whose section starts with ``"<name> [SimTalk]"``.
+        """Find docs whose entry/section matches ``name``.
 
-        This is the high-precision API lookup path used by
-        :func:`~plantsim_mcp.tools.get_api.get_api`. We scan
-        ``docs_meta.section`` with a ``LIKE`` prefix instead of going
-        through FTS, because FTS's token-split makes ``"<Name>
-        [SimTalk]"`` queries noisy (``[`` and ``]`` are operators).
-        Hits are sorted shortest-section-first so generic entries
-        outrank disambiguators like ``Active [SimTalk] - fluid objects``.
+        High-precision API lookup path used by
+        :func:`~plantsim_mcp.tools.get_api.get_api`. Two-stage lookup:
+
+        1. **Exact match** on the canonical ``entry_name`` column
+           (case-insensitive, populated by the fullmd indexer). This
+           catches *all* kinds — SimTalk methods, attributes, UI
+           controls — for a given identifier, regardless of the
+           bracket-suffix variant.
+        2. **Fallback prefix LIKE** on ``section`` (``"<name> [SimTalk]%"``)
+           for older indices where ``entry_name`` is not populated.
+
+        Results are de-duplicated by ``doc_id`` and sorted shortest-
+        section-first so generic entries outrank disambiguators like
+        ``Active [SimTalk] - fluid objects``.
         """
         conn = self._require_conn()
         if not name.strip():
             return []
-        # PTS Help convention: sections are exactly "<Name> [SimTalk]"
-        # or "<Name> [SimTalk] - <qualifier>". We also accept entries
-        # where the [SimTalk] tag is absent (a few non-API headings).
+
+        seen: set[str] = set()
+        out: list[Hit] = []
+
+        # Stage 1: exact entry_name (case-insensitive) — covers any kind.
+        cur = conn.execute(
+            """
+            SELECT m.doc_id, m.file_path, m.section,
+                   substr(f.content, 1, 240) AS snippet
+            FROM docs_meta m
+            JOIN docs_fts f ON m.doc_id = f.doc_id
+            WHERE m.entry_name = ? COLLATE NOCASE
+            ORDER BY length(m.section), m.section
+            LIMIT ?
+            """,
+            (name, top_k),
+        )
+        for row in cur.fetchall():
+            if row[0] not in seen:
+                seen.add(row[0])
+                out.append(
+                    Hit(
+                        doc_id=row[0],
+                        file_path=row[1],
+                        section=row[2],
+                        snippet=row[3],
+                        score=0.0,
+                    )
+                )
+
+        if len(out) >= top_k:
+            return out[:top_k]
+
+        # Stage 2: legacy LIKE on section ("<name> [SimTalk]%").
         like = f"{name} [SimTalk]%"
+        remaining = top_k - len(out)
         cur = conn.execute(
             """
             SELECT m.doc_id, m.file_path, m.section,
@@ -198,15 +266,21 @@ class SQLiteFTSIndex(Index):
             ORDER BY length(m.section), m.section
             LIMIT ?
             """,
-            (like, top_k),
+            (like, remaining + len(seen)),  # over-fetch so de-dup still fills top_k
         )
-        return [
-            Hit(
-                doc_id=row[0],
-                file_path=row[1],
-                section=row[2],
-                snippet=row[3],
-                score=0.0,
+        for row in cur.fetchall():
+            if row[0] in seen:
+                continue
+            seen.add(row[0])
+            out.append(
+                Hit(
+                    doc_id=row[0],
+                    file_path=row[1],
+                    section=row[2],
+                    snippet=row[3],
+                    score=0.0,
+                )
             )
-            for row in cur.fetchall()
-        ]
+            if len(out) >= top_k:
+                break
+        return out

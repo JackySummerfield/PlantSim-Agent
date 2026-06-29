@@ -31,12 +31,19 @@ class Doc:
         Heading or section name, used in citations and snippet display.
     content:
         Plain-text body of the chunk; the index tokenises this.
+    entry_name:
+        Optional canonical API/UI entry name (e.g. ``"Stop"`` for the
+        section ``"Stop [SimTalk] - Source"``). Populated by the
+        fullmd indexer so :meth:`Index.find_by_section`-style lookups
+        can do an exact match before falling back to LIKE patterns.
+        ``None`` for plain prose docs.
     """
 
     doc_id: str
     file_path: str
     section: str
     content: str
+    entry_name: str | None = None
 
 
 @dataclass(frozen=True)

@@ -174,6 +174,7 @@ def _cmd_build_project(args: argparse.Namespace) -> int:
 def _cmd_build_kb(args: argparse.Namespace) -> int:
     """Build / rebuild the help KB index from configured roots."""
     from .indexers.help_md_to_fts import build
+    from .indexers.pts_help_fullmd_indexer import build_fullmd
     from .storage.sqlite import SQLiteFTSIndex
 
     cfg = load()
@@ -181,9 +182,22 @@ def _cmd_build_kb(args: argparse.Namespace) -> int:
         roots = [Path(r).resolve() for r in args.root]
     else:
         roots = list(cfg.paths.help_kb_roots)
-    if not roots:
+
+    # fullmd source: CLI flag overrides config
+    if args.fullmd_src is not None:
+        fullmd_src: Path | None = Path(args.fullmd_src).resolve()
+    else:
+        fullmd_src = cfg.paths.fullmd_src
+
+    if args.chapters is not None:
+        chapters = tuple(args.chapters)
+    else:
+        chapters = cfg.paths.fullmd_chapters
+
+    if not roots and fullmd_src is None:
         print(
-            "error: no --root given and no [paths].help_kb_roots in config",
+            "error: nothing to index — give --root and/or --fullmd-src "
+            "(or set them in config.toml)",
             file=sys.stderr,
         )
         return 2
@@ -192,18 +206,32 @@ def _cmd_build_kb(args: argparse.Namespace) -> int:
         for r in missing:
             print(f"error: KB root not found: {r}", file=sys.stderr)
         return 2
+    if fullmd_src is not None and not fullmd_src.is_file():
+        print(f"error: fullmd source not found: {fullmd_src}", file=sys.stderr)
+        return 2
 
     db_path = cfg.paths.help_db
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     with SQLiteFTSIndex(db_path) as idx:
         idx.delete_all()
-        written = build(roots, idx)
-    print(
-        f"indexed {len(roots)} root(s) -> {db_path}\n"
-        f"  docs written: {written}"
-    )
-    for r in roots:
-        print(f"  - {r}")
+        written_prose = build(roots, idx) if roots else 0
+        written_fullmd = (
+            build_fullmd(fullmd_src, idx, chapters=chapters)
+            if fullmd_src is not None
+            else 0
+        )
+    total = written_prose + written_fullmd
+    print(f"indexed -> {db_path}\n  docs written: {total}")
+    if roots:
+        print(f"  prose roots ({written_prose} docs):")
+        for r in roots:
+            print(f"    - {r}")
+    if fullmd_src is not None:
+        print(
+            f"  fullmd source ({written_fullmd} docs, chapters="
+            f"{','.join(str(c) for c in chapters)}):"
+        )
+        print(f"    - {fullmd_src}")
     return 0
 
 
@@ -239,6 +267,19 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="markdown KB root (repeat for multiple). "
         "Overrides config.paths.help_kb_roots.",
+    )
+    bk.add_argument(
+        "--fullmd-src",
+        default=None,
+        help="path to a docling-produced _full_docling_code_tagged.md file. "
+        "Overrides config.paths.fullmd_src.",
+    )
+    bk.add_argument(
+        "--chapters",
+        type=lambda s: [int(p) for p in s.replace(",", " ").split() if p.strip()],
+        default=None,
+        help='chapter numbers to index from --fullmd-src (e.g. "11,12,13,15"). '
+        "Overrides config.paths.fullmd_chapters.",
     )
 
     args = parser.parse_args(argv)

@@ -33,7 +33,44 @@ def test_cli_build_kb_no_root_no_config(tmp_path: Path, capsys, monkeypatch) -> 
     monkeypatch.setenv("PLANTSIM_AGENT_HOME", str(tmp_path))
     rc = main(["build-kb"])
     assert rc == 2
-    assert "no --root given" in capsys.readouterr().err
+    assert "nothing to index" in capsys.readouterr().err
+
+
+def test_cli_build_kb_with_fullmd_src(tmp_path: Path, capsys, monkeypatch) -> None:
+    """`build-kb --fullmd-src <file> --chapters 11` indexes a fullmd source."""
+    monkeypatch.setenv("PLANTSIM_AGENT_HOME", str(tmp_path))
+    src = tmp_path / "fullmd" / "_full_docling_code_tagged.md"
+    src.parent.mkdir()
+    src.write_text(
+        "# 11. Objects Reference Help\n\n"
+        "## Material Flow Objects\n\n"
+        "### Source\n\n"
+        "#### Attributes\n\n"
+        "##### Stop [SimTalk] - Source\n\n"
+        "Body for Stop.\n",
+        encoding="utf-8",
+    )
+    rc = main(
+        [
+            "build-kb",
+            "--fullmd-src",
+            str(src),
+            "--chapters",
+            "11",
+        ]
+    )
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "fullmd source" in out
+    assert "chapters=11" in out
+    assert (tmp_path / "indices" / "help.db").exists()
+
+
+def test_cli_build_kb_missing_fullmd_src(tmp_path: Path, capsys, monkeypatch) -> None:
+    monkeypatch.setenv("PLANTSIM_AGENT_HOME", str(tmp_path))
+    rc = main(["build-kb", "--fullmd-src", str(tmp_path / "nope.md")])
+    assert rc == 2
+    assert "fullmd source not found" in capsys.readouterr().err
 
 
 def test_cli_build_project_with_path(

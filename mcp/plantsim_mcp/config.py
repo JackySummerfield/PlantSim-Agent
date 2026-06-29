@@ -65,6 +65,18 @@ class Paths:
     default_project: Path | None = None
     """Optional default ``.psfm`` project; tools may require an explicit path otherwise."""
 
+    fullmd_src: Path | None = None
+    """Optional path to the PTS Help ``_full_docling_code_tagged.md`` file.
+
+    When set, ``build-kb`` indexes its H5/H6 reference entries (one per
+    SimTalk method / object attribute / UI control) into the same
+    ``help.db`` alongside the prose KB.
+    """
+
+    fullmd_chapters: tuple[int, ...] = (11, 12, 13, 15)
+    """Chapter numbers to index from ``fullmd_src``. Default = the four
+    chapters whose H5/H6 structure is consistently reference-like."""
+
     @property
     def help_kb_root(self) -> Path | None:
         """First configured KB root, for tools/scripts that want a single path."""
@@ -110,6 +122,34 @@ def _coerce_path_list(value: object) -> tuple[Path, ...]:
     raise TypeError(f"expected list of string paths, got {type(value).__name__}: {value!r}")
 
 
+def _coerce_int_list(value: object) -> tuple[int, ...]:
+    if value is None:
+        return ()
+    if isinstance(value, int):
+        return (value,)
+    if isinstance(value, str):
+        # accept "11,12,13,15" or "11 12 13 15"
+        parts = [p.strip() for p in value.replace(",", " ").split() if p.strip()]
+        try:
+            return tuple(int(p) for p in parts)
+        except ValueError as exc:
+            raise TypeError(f"expected list of ints, got {value!r}") from exc
+    if isinstance(value, (list, tuple)):
+        out: list[int] = []
+        for item in value:
+            if isinstance(item, int):
+                out.append(item)
+            else:
+                try:
+                    out.append(int(item))
+                except (TypeError, ValueError) as exc:
+                    raise TypeError(
+                        f"expected list of ints, got {type(item).__name__}: {item!r}"
+                    ) from exc
+        return tuple(out)
+    raise TypeError(f"expected list of ints, got {type(value).__name__}: {value!r}")
+
+
 def load(config_path: Path | None = None) -> Config:
     """Load configuration from disk.
 
@@ -131,10 +171,16 @@ def load(config_path: Path | None = None) -> Config:
     if not roots:
         roots = _coerce_path_list(paths_section.get("help_kb_root"))
 
+    fullmd_chapters = _coerce_int_list(paths_section.get("fullmd_chapters"))
+    if not fullmd_chapters:
+        fullmd_chapters = (11, 12, 13, 15)
+
     paths = Paths(
         help_kb_roots=roots,
         index_dir=_coerce_path(paths_section.get("index_dir"))
         or (agent_home() / "indices"),
         default_project=_coerce_path(paths_section.get("default_project")),
+        fullmd_src=_coerce_path(paths_section.get("fullmd_src")),
+        fullmd_chapters=fullmd_chapters,
     )
     return Config(paths=paths, source=target)
