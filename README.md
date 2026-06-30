@@ -61,7 +61,11 @@ cd $HOME/.copilot/plantsim-agent
 .\scripts\install.ps1
 ```
 
-脚本会在 `~/.copilot/agents/` 和 `~/.copilot/skills/` 下创建 symlink 指向仓库内的源文件——这样你编辑仓库里的文件 VS Code 立即看到，不需要拷贝同步。Idempotent，`git pull` 后重跑即可。
+脚本会做三件事，全部 idempotent：
+
+1. 在 `~/.copilot/agents/` 和 `~/.copilot/skills/` 下创建 symlink，指向仓库内的源文件——你编辑仓库 VS Code 立即看到，不用手动同步
+2. 如果 `plantsim-copilot-mcp` 已经 `pip install` 过，就把它注册到 VS Code 用户级 `mcp.json` 里（详见下一步）
+3. `git pull` 之后重跑即可，不会重复写入
 
 **3. 建索引** — 运行交互式向导
 
@@ -81,9 +85,13 @@ CI / 冷装机器可走非交互模式：
 plantsim-copilot-mcp init --non-interactive --kb-root .\kb_minimal --build
 ```
 
-**4. 注册 MCP Server**
+**4. 注册 MCP Server**（一行命令搞定）
 
-在 VS Code 用户级 `mcp.json` 加一段（Windows 路径 `%APPDATA%\Code\User\mcp.json`，macOS `~/Library/Application Support/Code/User/mcp.json`，Linux `~/.config/Code/User/mcp.json`）：
+```powershell
+plantsim-copilot-mcp register-vscode
+```
+
+这会自动把下面这段 JSON 合并到 VS Code 用户级 `mcp.json` 里（Windows 路径 `%APPDATA%\Code\User\mcp.json`，macOS `~/Library/Application Support/Code/User/mcp.json`，Linux `~/.config/Code/User/mcp.json`），不会动你已有的其他 server 配置：
 
 ```json
 {
@@ -97,9 +105,9 @@ plantsim-copilot-mcp init --non-interactive --kb-root .\kb_minimal --build
 }
 ```
 
-server 名必须是 `plantsim-copilot-mcp`（orchestrator agent 白名单 `plantsim-copilot-mcp/*` 靠它）。如果 VS Code 找不到命令（典型场景：装在 conda/venv 里但 VS Code 不是从那个环境启动的），把 `command` 改成绝对路径，例如 `"C:\\ProgramData\\miniforge3\\Scripts\\plantsim-copilot-mcp.exe"`，用 `(Get-Command plantsim-copilot-mcp).Source` 查到。
-
-完整冷装核对清单见 [`docs/cold-install.md`](./docs/cold-install.md)。
+> ℹ️ **提示**：`install.ps1` 已经在第 2 步替你跑过这条命令了。这里把它单独列出来是因为：(a) 第一次跑 `install.ps1` 时如果还没 `pip install -e mcp/`，命令找不到会跳过；(b) 你换 Python 环境后需要重跑。
+>
+> 如果 VS Code 找不到命令（典型场景：装在 conda/venv 里但 VS Code 不是从那个环境启动的），用 `plantsim-copilot-mcp register-vscode --absolute --force` 写入绝对路径。手动配置见 [`docs/manual-mcp.md`](./docs/manual-mcp.md)，完整冷装清单见 [`docs/cold-install.md`](./docs/cold-install.md)。
 
 **5. 重载 VS Code** (`Ctrl+Shift+P` → `Developer: Reload Window`)
 

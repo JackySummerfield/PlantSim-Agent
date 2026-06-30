@@ -61,11 +61,37 @@ cd $HOME/.copilot/plantsim-agent
 .\scripts\install.ps1
 ```
 
-The script creates symlinks under `~/.copilot/agents/` and `~/.copilot/skills/` pointing back to the repo, so edits in the repo are picked up by VS Code immediately — no copy step. Idempotent; rerun after every `git pull`.
+The script does three idempotent things:
 
-**3. Register the MCP Server**
+1. Creates symlinks under `~/.copilot/agents/` and `~/.copilot/skills/` pointing back to the repo, so edits in the repo are picked up by VS Code immediately — no copy step
+2. If `plantsim-copilot-mcp` is already `pip install`-ed, registers it in VS Code's user-level `mcp.json` (see step 4 below)
+3. Safe to rerun after every `git pull`
 
-Add an entry to VS Code's user-level `mcp.json` (Windows `%APPDATA%\Code\User\mcp.json`, macOS `~/Library/Application Support/Code/User/mcp.json`, Linux `~/.config/Code/User/mcp.json`):
+**3. Build the index** — run the interactive wizard
+
+```powershell
+# Once pip-installed, use the console script:
+plantsim-copilot-mcp init
+
+# Or run straight from the repo (no install needed):
+python scripts\build_kb.py
+```
+
+The wizard asks 4 things: (1) markdown KB roots (defaults include `kb_minimal/`, multiple allowed); (2) optional PTS Help fullmd source file + chapters to index; (3) optional default `.psfm` project; (4) where to write the index. It writes `~/.plantsim-agent/config.toml` and can immediately call the indexers to build `help.db` / `project.db`.
+
+For CI / cold-install machines, use non-interactive mode:
+
+```powershell
+plantsim-copilot-mcp init --non-interactive --kb-root .\kb_minimal --build
+```
+
+**4. Register the MCP Server** (one command)
+
+```powershell
+plantsim-copilot-mcp register-vscode
+```
+
+This merges the following JSON into VS Code's user-level `mcp.json` (Windows `%APPDATA%\Code\User\mcp.json`, macOS `~/Library/Application Support/Code/User/mcp.json`, Linux `~/.config/Code/User/mcp.json`) without touching any other server entries you already have:
 
 ```json
 {
@@ -79,11 +105,11 @@ Add an entry to VS Code's user-level `mcp.json` (Windows `%APPDATA%\Code\User\mc
 }
 ```
 
-The server name **must** be `plantsim-copilot-mcp` — the orchestrator agent's `plantsim-copilot-mcp/*` tool whitelist depends on it. If VS Code can't find the command on its PATH (typical when the package lives in a conda/venv that VS Code wasn't launched from), substitute the absolute executable path, e.g. `"C:\\ProgramData\\miniforge3\\Scripts\\plantsim-copilot-mcp.exe"` — find it with `(Get-Command plantsim-copilot-mcp).Source`.
+> ℹ️ **Note**: `install.ps1` already runs this command for you in step 2. It's listed here separately because: (a) the first `install.ps1` run will skip it if `pip install -e mcp/` hasn't happened yet; (b) you'll need to rerun it after switching Python environments.
+>
+> If VS Code can't find the command on PATH (typical when the package lives in a conda/venv that VS Code wasn't launched from), run `plantsim-copilot-mcp register-vscode --absolute --force` to write the absolute path instead. Manual configuration: [`docs/manual-mcp.md`](./docs/manual-mcp.md). Full cold-install checklist: [`docs/cold-install.md`](./docs/cold-install.md).
 
-Full cold-install checklist: [`docs/cold-install.md`](./docs/cold-install.md).
-
-**4. Reload VS Code** (`Ctrl+Shift+P` → `Developer: Reload Window`)
+**5. Reload VS Code** (`Ctrl+Shift+P` → `Developer: Reload Window`)
 
 `PlantSim-Agent` will appear in the Copilot Chat agent picker.
 

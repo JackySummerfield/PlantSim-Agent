@@ -196,5 +196,26 @@ foreach ($d in $skillDirs) {
     New-RepoLink -LinkPath (Join-Path $targetSkills $d.Name) -SourcePath $d.FullName -Kind 'Directory'
 }
 
+# ---------- Register MCP server in VS Code's user mcp.json ----------
+Write-Host ""
+Write-Host "VS Code MCP registration:" -ForegroundColor Cyan
+$mcpCmd = Get-Command 'plantsim-copilot-mcp' -ErrorAction SilentlyContinue
+if ($null -ne $mcpCmd) {
+    if ($PSCmdlet.ShouldProcess('VS Code mcp.json', 'register plantsim-copilot-mcp')) {
+        try {
+            & plantsim-copilot-mcp register-vscode
+        }
+        catch {
+            Write-Warning "register-vscode failed: $($_.Exception.Message)"
+            Write-Host "  You can rerun it manually: plantsim-copilot-mcp register-vscode --force" -ForegroundColor DarkGray
+        }
+    }
+}
+else {
+    Write-Host "  [skip] 'plantsim-copilot-mcp' not on PATH yet." -ForegroundColor Yellow
+    Write-Host "         Run 'pip install -e mcp/' first, then re-run this script," -ForegroundColor DarkGray
+    Write-Host "         or execute 'plantsim-copilot-mcp register-vscode' manually." -ForegroundColor DarkGray
+}
+
 Write-Host ""
 Write-Host "Done. Reload VS Code to pick up new agents/skills." -ForegroundColor Green

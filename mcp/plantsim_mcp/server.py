@@ -256,6 +256,7 @@ def main(argv: list[str] | None = None) -> int:
       * ``init`` — interactive wizard to write ``~/.plantsim-agent/config.toml``
       * ``build-kb [--root <md-dir>]`` — index a markdown KB
       * ``build-project --project <path>`` — index a ``.psfm`` folder
+      * ``register-vscode`` — add this server to VS Code's user mcp.json
     """
     parser = argparse.ArgumentParser(prog="plantsim-copilot-mcp")
     sub = parser.add_subparsers(dest="cmd")
@@ -267,6 +268,11 @@ def main(argv: list[str] | None = None) -> int:
     from .build_kb_wizard import add_init_subparser
 
     add_init_subparser(sub)
+
+    # VS Code mcp.json registration — same pattern.
+    from .register_vscode import add_subparser as add_register_vscode_subparser
+
+    add_register_vscode_subparser(sub)
 
     bp = sub.add_parser("build-project", help="index a .psfm project folder")
     bp.add_argument(
@@ -306,6 +312,10 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_build_project(args)
     if args.cmd == "build-kb":
         return _cmd_build_kb(args)
+    if args.cmd == "register-vscode":
+        from .register_vscode import cmd_register_vscode
+
+        return cmd_register_vscode(args)
     return _cmd_serve(args)
 
 

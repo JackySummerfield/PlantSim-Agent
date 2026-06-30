@@ -8,6 +8,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Nothing yet — v0.2 work tracked in [`docs/roadmap.md`](docs/roadmap.md)._
 
+## [0.1.1] - 2026-06-30
+
+QoL patch release. Reduces the cold-install path from "edit `mcp.json`
+by hand" to a single `plantsim-copilot-mcp register-vscode` command —
+called automatically by `install.ps1`. No breaking changes; the
+manual JSON config is still supported and documented.
+
+### Added
+- `plantsim-copilot-mcp register-vscode` subcommand
+  ([`mcp/plantsim_mcp/register_vscode.py`](mcp/plantsim_mcp/register_vscode.py))
+  — discovers VS Code's user-level `mcp.json` per OS (Windows
+  `%APPDATA%\Code\User`, macOS `~/Library/Application Support/Code/User`,
+  Linux `~/.config/Code/User`), idempotently merges the
+  `plantsim-copilot-mcp` server entry without clobbering siblings,
+  and creates a timestamped `.bak-*` backup before overwriting.
+  Flags: `--target <path>`, `--command <abs-path>`, `--absolute`,
+  `--force`, `--dry-run`. Exit code 2 on a conflict-without-force so
+  CI / install scripts can detect the case.
+- `scripts/install.ps1` — now calls `plantsim-copilot-mcp register-vscode`
+  at the end of its symlink setup if the console-script is on `PATH`;
+  prints a non-fatal hint when it isn't (typical first-run before
+  `pip install -e mcp/`).
+- [`docs/manual-mcp.md`](docs/manual-mcp.md) — fallback page for users
+  who need to edit `mcp.json` by hand (corporate VS Code variants,
+  custom user data dirs, project-level `.vscode/mcp.json`, etc.).
+- 22 new unit tests in
+  [`mcp/tests/test_register_vscode.py`](mcp/tests/test_register_vscode.py)
+  covering per-OS path discovery, PATH lookup with absolute-path
+  fallback, fresh-write / merge-into-existing / idempotent re-run /
+  conflict-without-force / `--force` overwrite / dry-run / malformed
+  JSON. Test count: 119 → 141.
+
+### Changed
+- `README.md` and `README.en.md` — quick-start step 4 collapsed from
+  ~30 lines of manual JSON snippet to a single `register-vscode`
+  command, with the manual variant linked out to `docs/manual-mcp.md`.
+
 ## [0.1.0] - 2026-06-29
 
 First public release. Covers KB Q&A, SimTalk code authoring, and read-only `.psfm` project analysis with mandatory citation auditing.
