@@ -21,7 +21,7 @@ Siemens Plant Simulation Help is copyrighted. This project **does not ship the H
 
 1. Open [Plant Simulation Help](https://docs.sw.siemens.com/zh-CN/doc/297028302/PL20250108338137660.PlantSimulation/Help_Start_Page) (or the English version)
 2. Log in with your Siemens account
-3. Click **"参考文档 PDF"** (upper right corner) / **"Reference Documentation PDF"**
+3. Click **"查看文档 PDF"** (upper right corner) / **"View Documentation PDF"**
 4. Save the PDF somewhere (e.g. `~/Downloads/PlantSimulation_Help.pdf`)
 
 ### 2. Convert the PDF to indexed-ready markdown

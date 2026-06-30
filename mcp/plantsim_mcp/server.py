@@ -24,6 +24,7 @@ from .tools import find_callers as _find_callers
 from .tools import find_method as _find_method
 from .tools import get_api as _get_api
 from .tools import get_object_graph as _get_object_graph
+from .tools import list_section as _list_section
 from .tools import search_code as _search_code
 from .tools import search_help as _search_help
 from .tools import validate_simtalk as _validate_simtalk
@@ -143,6 +144,33 @@ def build_server(config: Config | None = None) -> Any:
             top_k: Maximum entries to return (default 5).
         """
         return _get_api.get_api(name=name, top_k=top_k, config=cfg)
+
+    @mcp.tool()
+    def list_section(
+        file_path: str = "",
+        kind: str = "",
+        query: str = "",
+        top_k: int = 200,
+    ) -> dict[str, Any]:
+        """List all entries in the help KB matching filters.
+
+        Use this to enumerate APIs exhaustively — e.g. "list all string
+        functions", "show every attribute of Buffer". Unlike
+        ``search_help`` (ranked snippets) or ``get_api`` (needs an exact
+        name), this tool returns a complete list.
+
+        Args:
+            file_path: Prefix filter on the source file path (e.g. "Ch12"
+                for chapter 12). Empty = no filter.
+            kind: Bracket-tag filter on section title (e.g. "SimTalk",
+                "text box"). Empty = no filter.
+            query: Substring filter on entry_name (e.g. "str" for
+                string functions). Case-insensitive. Empty = all.
+            top_k: Max results (default 200).
+        """
+        return _list_section.list_section(
+            file_path=file_path, kind=kind, query=query, top_k=top_k, config=cfg
+        )
 
     return mcp
 
