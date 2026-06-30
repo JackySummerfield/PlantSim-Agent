@@ -1,6 +1,6 @@
 # Roadmap — PlantSim-Agent
 
-**Status:** Draft v0.1 · Last updated: 2026-06-29
+**Status:** v0.1.1 released · v0.2 in planning · Last updated: 2026-06-30
 
 This roadmap describes **what** lands **when**. For functional detail see [`spec.md`](./spec.md); for the design decisions behind these features see [`architecture.md`](./architecture.md).
 
@@ -8,47 +8,63 @@ Releases follow [Semantic Versioning](https://semver.org/). `v0.x` releases are 
 
 ---
 
-## v0.1 — Foundations (current release in progress)
+## v0.1.x — Foundations ✅ shipped
 
 **Theme:** make all three workflows usable end-to-end against a real Plant Simulation project, with citation-grounded answers.
 
-### Phase 1 — Repository & specification scaffolding ✅ in progress
+### v0.1.0 — initial release (tag `v0.1.0`, 2026-06-30)
+
+#### Phase 1 — Repository & specification scaffolding ✅
 - [x] Directory skeleton, `.gitignore`, `.gitattributes`, `LICENSE`
 - [x] `README.md`, `CHANGELOG.md`
 - [x] `docs/spec.md`, `docs/architecture.md`, `docs/roadmap.md`
-- [ ] `docs/kb-build-guide.md` (stub for v0.1; full procedure when indexer lands)
-- [ ] Migrate self-authored references from existing skill into `kb_minimal/`
-- [ ] Initial git commit
+- [x] `docs/kb-build-guide.md` (end-to-end PDF → indexed KB procedure)
+- [x] Self-authored references migrated into `kb_minimal/` (`simtalk-api-index.md`, `simtalk-syntax-quick-ref.md`, `modeling-standards.md`, `knowledge-base-map.md`)
+- [x] Initial git commit
 
-### Phase 2 — MCP server (core capability)
+#### Phase 2 — MCP server (core capability) ✅
 - [x] `pyproject.toml`, FastMCP entry, `uvx`-compatible packaging
 - [x] `storage/base.py` abstract `Index` + `storage/sqlite.py` FTS5 implementation
-- [ ] Help indexer: `help_pdf_to_md.py` (markitdown), `help_md_to_fts.py` ([x] md→fts; [ ] pdf→md)
-- [ ] `.psfm` indexer: `psfm_parser.py`, `psfm_indexer.py` with caller graph
-- [x] MCP tools: `search_help`, `get_api`, `find_method`, `find_callers`, `get_object_graph`, `search_code`, `validate_simtalk` (regex-level rules: ST001-ST004)
-- [x] `pytest` suite covering each tool with fixture data (110 tests, real-corpus smoke against a large-scale logistics `.psfm` project)
+- [x] Help indexer: `help_md_to_fts.py` for the markdown half; PDF→markdown lives in `scripts/convert_help_pdf.py` (markitdown + clean + code-tag) — deliberately kept outside the MCP package so the runtime stays light, see [`docs/kb-build-guide.md`](./kb-build-guide.md)
+- [x] `.psfm` indexer: `psfm_parser.py` + `psfm_indexer.py` (objects, code_units, flow_edges, Origin-inheritance resolution)
+- [x] MCP tools: `search_help`, `get_api`, `find_method`, `find_callers`, `get_object_graph`, `search_code`, `validate_simtalk` (regex rules ST001-ST004)
+- [x] `pytest` suite covering each tool with fixture data (122 tests at v0.1.0; real-corpus smoke against a large-scale logistics `.psfm` project)
 - [x] W3.1 chapter-aware `pts_help_fullmd` indexer (entry_name two-stage lookup; 4944 docs)
 - [x] P0 `did_you_mean` suggestions on miss (storage layer + dict return shape for `get_api` / `find_method`)
 
-### Phase 3 — Agents and skills
+#### Phase 3 — Agents and skills ✅
 - [x] `agents/plantsim-copilot.agent.md` — orchestrator with intent routing + mandatory citation-review loop
 - [x] `agents/citation-reviewer.agent.md` — anchor-first, JSON-verdict subagent (`user-invocable: false`)
 - [x] `skills/plantsim-kb-qa/` — Q&A cascade with `**Sources:**` contract; refuses on miss
 - [x] `skills/plantsim-code-author/` — Symbol-Lookup-Cascade + API-Evidence-Table + Refuse-to-Guess
 - [x] `skills/plantsim-project-analyst/` — four sub-procedures (locate / trace / map / audit); Inheritance Audit always-on
 
-### Phase 4 — Installation, evaluation, documentation
-- [x] `scripts/install.ps1` — symlink agents & skills into `~/.copilot/` (with Developer-Mode pre-check)
+#### Phase 4 — Installation, evaluation, documentation ✅
+- [x] `scripts/install.ps1` — symlink agents into `~/.copilot/` (with Developer-Mode pre-check)
 - [x] ~~`scripts/install.sh` (Linux/macOS parity)~~ — **skipped**: Plant Simulation is Windows-only, so a Linux/macOS install path has no closed loop (the agent has no value without the PS host)
 - [x] `plantsim-copilot-mcp init` wizard (+ `scripts/build_kb.py` shim) — interactive & `--non-interactive` modes; writes `config.toml`, optional `--build` invokes existing indexers
 - [x] Evaluation set: 20 Q&A questions with hand-graded ground truth (`tests/eval/qa_questions.yaml`, all 20 passing against `kb_minimal/`)
 - [x] Citation-reviewer recall test: 10 deliberately uncited responses (`tests/eval/citation_recall.yaml`, all 10 passing against pure-Python regex port)
-- [x] Cold-install test — `tests/cold_install/test_cold_install.py` (3 automated subprocess tests) + [`docs/cold-install.md`](./cold-install.md) (7-step manual gate for VS Code integration)
+- [x] Cold-install test — `tests/cold_install/test_cold_install.py` (3 automated subprocess tests) + [`docs/cold-install.md`](./cold-install.md) (7-step manual gate for VS Code integration, including the MCP-server registration step filled in by `v0.1.0`)
 
-### Phase 5 — Public release
-- [ ] GitHub repository public, tag `v0.1.0`
+#### Phase 5 — Public release ✅
+- [x] GitHub repository public, tag `v0.1.0` (pushed 2026-06-30)
 - [x] Release notes (`docs/release-notes/v0.1.0.md`) + announcement drafts (`docs/release-notes/v0.1.0-announcement.md`)
-- [ ] Announcement on Plant Simulation Community / LinkedIn / PSWiki
+- [ ] **Announcement on Plant Simulation Community / LinkedIn / PSWiki** — still pending
+
+### v0.1.1 — One-command MCP registration (tag `v0.1.1`, 2026-06-30) ✅
+
+Quality-of-life patch addressing the v0.1.0 cold-install pain point (locate `mcp.json` per OS, hand-merge JSON without clobbering siblings, figure out the right `command` value).
+
+- [x] **`plantsim-copilot-mcp register-vscode` subcommand** — locates VS Code's user-level `mcp.json` per OS, merges the `plantsim-copilot-mcp` entry idempotently, backs up the previous file before overwrite, refuses `--force`-less clobber
+- [x] `install.ps1` calls `register-vscode` automatically at the end of symlink setup (non-fatal skip if the console script isn't on PATH yet)
+- [x] README quick-start step 4 collapsed from a 30-line JSON snippet to one command; the manual JSON variant moved to [`docs/manual-mcp.md`](./manual-mcp.md)
+- [x] Test count 122 → 141 (22 new tests for `register_vscode`)
+
+### Post-v0.1.1 patches ✅
+
+- [x] **kb-build-guide rewrite** (commit `816c260`) — new `scripts/convert_help_pdf.py` (markitdown + clean + code-tag pipeline); end-to-end procedure from PDF download to verified KB; docling kept as optional high-quality path
+- [x] **Security fix: skills no longer symlinked globally** (commit `028a204`) — skills now live only in the repo and are loaded by the orchestrator via `read_file` from `~/.copilot/plantsim-agent/skills/`. Prevents skill-only invocations that would bypass the orchestrator's mandatory `citation-reviewer` dispatch. **Existing v0.1.0 installs still have stale skill symlinks under `~/.copilot/skills/plantsim-*`; harmless but cleanable with `scripts/uninstall.ps1`.**
 
 ---
 
