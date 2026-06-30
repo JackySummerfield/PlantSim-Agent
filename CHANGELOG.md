@@ -6,7 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_Nothing yet — v0.2 work tracked in [`docs/roadmap.md`](docs/roadmap.md)._
+<!-- 日常 push 到 main 的改动写在这里，攒够一个里程碑再打 tag 发 release -->
+
+### Added
+
+### Changed
+
+### Fixed
 
 ## [0.1.1] - 2026-06-30
 
