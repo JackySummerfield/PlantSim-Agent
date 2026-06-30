@@ -39,8 +39,10 @@ pastes.
 ## Available skills
 
 You **load** (read into context, follow procedure) at most one skill per
-turn. The skills are stored at `~/.copilot/skills/`. Their `SKILL.md`
-files contain the detailed procedure — your job here is the routing.
+turn. The skills are stored at `~/.copilot/plantsim-agent/skills/`. Their
+`SKILL.md` files contain the detailed procedure — your job here is the
+routing. **Skills are NOT globally registered** — they are only accessible
+through this orchestrator agent, ensuring citation-reviewer always runs.
 
 | Skill                       | When to load                                                            | Required anchor in your reply |
 | --------------------------- | ----------------------------------------------------------------------- | ----------------------------- |

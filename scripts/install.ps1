@@ -36,12 +36,10 @@ Set-StrictMode -Version Latest
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot  = Split-Path -Parent $scriptDir
 $repoAgents = Join-Path $repoRoot 'agents'
-$repoSkills = Join-Path $repoRoot 'skills'
 
 # ---------- Determine VS Code Copilot home ----------
 $copilotHome = Join-Path $HOME '.copilot'
 $targetAgents = Join-Path $copilotHome 'agents'
-$targetSkills = Join-Path $copilotHome 'skills'
 
 Write-Host ""
 Write-Host "Repo root        : $repoRoot"
@@ -51,9 +49,6 @@ Write-Host ""
 # ---------- Sanity checks ----------
 if (-not (Test-Path $repoAgents)) {
     throw "Missing $repoAgents. Are you running this from a plantsim-agent clone?"
-}
-if (-not (Test-Path $repoSkills)) {
-    throw "Missing $repoSkills. Are you running this from a plantsim-agent clone?"
 }
 
 # ---------- Pre-check: can this session create symlinks? ----------
@@ -103,13 +98,11 @@ if (-not $symlinkCheck.Ok) {
 }
 Write-Host "Symlink permission: OK ($($symlinkCheck.Reason))" -ForegroundColor DarkGray
 
-# Ensure the two destination dirs exist (real dirs, not symlinks).
-foreach ($dir in @($targetAgents, $targetSkills)) {
-    if (-not (Test-Path $dir)) {
-        if ($PSCmdlet.ShouldProcess($dir, 'mkdir')) {
-            New-Item -ItemType Directory -Path $dir -Force | Out-Null
-            Write-Host "Created $dir" -ForegroundColor DarkGray
-        }
+# Ensure the agent destination dir exists.
+if (-not (Test-Path $targetAgents)) {
+    if ($PSCmdlet.ShouldProcess($targetAgents, 'mkdir')) {
+        New-Item -ItemType Directory -Path $targetAgents -Force | Out-Null
+        Write-Host "Created $targetAgents" -ForegroundColor DarkGray
     }
 }
 
@@ -185,16 +178,14 @@ foreach ($f in $agentFiles) {
     New-RepoLink -LinkPath (Join-Path $targetAgents $f.Name) -SourcePath $f.FullName -Kind 'File'
 }
 
-# ---------- Link skills ----------
+# ---------- Skills ----------
+# Skills are NOT symlinked into ~/.copilot/skills/ (by design).
+# They live only inside the repo and are loaded by the orchestrator agent
+# via read_file. This prevents users from bypassing the orchestrator and
+# triggering skills directly (which would skip citation-reviewer audit).
 Write-Host ""
 Write-Host "Skills:" -ForegroundColor Cyan
-$skillDirs = @(Get-ChildItem -LiteralPath $repoSkills -Directory -ErrorAction SilentlyContinue)
-if ($skillDirs.Count -eq 0) {
-    Write-Host "  (none in repo yet — will be added in Phase 3)" -ForegroundColor DarkGray
-}
-foreach ($d in $skillDirs) {
-    New-RepoLink -LinkPath (Join-Path $targetSkills $d.Name) -SourcePath $d.FullName -Kind 'Directory'
-}
+Write-Host "  Skills stay in repo (loaded by orchestrator only, not globally registered)" -ForegroundColor DarkGray
 
 # ---------- Register MCP server in VS Code's user mcp.json ----------
 Write-Host ""
