@@ -81,16 +81,30 @@ Follow these steps in order. Do not skip steps. Do not invent steps.
 ## Sources contract
 
 Every answer that uses tool output **must** end with a `**Sources:**`
-block. One bullet per `hit`, in the exact form:
+block. Format depends on the `file_path` quality:
+
+**If `file_path` points to a specific chapter file** (e.g.
+`pts_help_2504/11_Objects_Reference_Help/04_Resource_Objects/09_ShiftCalendar.md`):
+use a markdown link:
 
 ```
 **Sources:**
-- [<section>](<file_path>)
-- [<section>](<file_path>)
+- [ShiftCalendar](pts_help_2504/11_Objects_Reference_Help/04_Resource_Objects/09_ShiftCalendar.md) § Pauses
 ```
 
-Use the `section` field as the link text and the `file_path` field as the
-link target. Do not paraphrase, abbreviate, or omit.
+**If `file_path` is a giant single file** (e.g. `_full_docling_code_tagged.md`):
+do NOT link. Instead give a structured breadcrumb path derived from the
+`section` field:
+
+```
+**Sources:**
+- PTS Help > Ch11 Objects Reference > Resource Objects > ShiftCalendar > "Pauses [ShiftCalendar]"
+- PTS Help > Ch11 Objects Reference > Resource Objects > ShiftCalendar > "Active [check box]"
+```
+
+Infer the chapter/category from the `file_path` or `section` content.
+Always include the **exact `section` value in quotes** so the user can
+Ctrl+F in the Help or in the markdown file.
 
 ## Hard rules
 
@@ -120,7 +134,7 @@ Output:
 > 返回 `VOID`。常用作 `if buffer.cont /= VOID then …`。
 >
 > **Sources:**
-> - [cont [SimTalk]](pts_help_2504_fullmd/Buffer.md)
+> - PTS Help > Ch11 Objects Reference > Material Flow Objects > Buffer > "cont [SimTalk]"
 
 ---
 
