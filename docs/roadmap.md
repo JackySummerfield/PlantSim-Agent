@@ -50,7 +50,6 @@ Releases follow [Semantic Versioning](https://semver.org/). `v0.x` releases are 
 #### Phase 5 — Public release ✅
 - [x] GitHub repository public, tag `v0.1.0` (pushed 2026-06-30)
 - [x] Release notes (`docs/release-notes/v0.1.0.md`) + announcement drafts (`docs/release-notes/v0.1.0-announcement.md`)
-- [ ] **Announcement on Plant Simulation Community / LinkedIn / PSWiki** — still pending
 
 ### v0.1.1 — One-command MCP registration (tag `v0.1.1`, 2026-06-30) ✅
 
