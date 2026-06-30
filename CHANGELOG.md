@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Orchestrator agent: skill path updated to `~/.copilot/plantsim-agent/skills/`
 
 ### Fixed
+- Sources contract: fullmd entries no longer produce broken links to a 250K-line
+  single file; replaced with structured breadcrumbs for Ctrl+F search
 - Removed broken `/memories/doc-conversion-lessons.md` link from kb-build-guide
 
 ## [0.1.1] - 2026-06-30

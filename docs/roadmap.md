@@ -67,6 +67,7 @@ Quality-of-life patch addressing the v0.1.0 cold-install pain point (locate `mcp
 - [x] **`list_section` MCP tool** (commit `dedd552`) — enumerate all entries in the help KB by chapter/kind/query filters. Answers "list all X" questions exhaustively. 10 new tests.
 - [x] **`smart_lookup` MCP tool** (commit `0cdd1c0`) — one-shot cascade (exact API match → suggestion retry → FTS fallback) in a single tool call. Cuts per-question MCP round-trips from 5–10 to 1–2. 10 new tests.
 - [x] **`plantsim-kb-qa` skill rewrite** — cascade simplified from multi-step `get_api` → `search_help` manual LLM-driven loop to single `smart_lookup` call. Added `list_section` for enumeration questions. Credit cost per question drops ~80%.
+- [x] **Sources contract fix** (commit `63a906f`) — fullmd entries no longer generate broken links to a 250K-line single file. Instead uses structured breadcrumbs (`PTS Help > Ch > Category > Object > "section"`); multi-file KB entries keep working markdown links. Exact `section` value always quoted for Ctrl+F search.
 
 ---
 
