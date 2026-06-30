@@ -27,6 +27,7 @@ from .tools import get_object_graph as _get_object_graph
 from .tools import list_section as _list_section
 from .tools import search_code as _search_code
 from .tools import search_help as _search_help
+from .tools import smart_lookup as _smart_lookup
 from .tools import validate_simtalk as _validate_simtalk
 
 
@@ -144,6 +145,26 @@ def build_server(config: Config | None = None) -> Any:
             top_k: Maximum entries to return (default 5).
         """
         return _get_api.get_api(name=name, top_k=top_k, config=cfg)
+
+    @mcp.tool()
+    def smart_lookup(query: str, top_k: int = 10) -> dict[str, Any]:
+        """One-shot intelligent help lookup with automatic cascade.
+
+        Accepts either a SimTalk identifier (e.g. "SimTime",
+        "str_to_dateTime") or a natural-language question (e.g. "how to
+        get model time as dateTime"). Automatically tries exact API
+        match → suggestion retry → FTS search in one call.
+
+        Returns ``{"query", "strategy", "hits", "did_you_mean"}``.
+        ``strategy`` is one of "exact", "suggestion", "fts", "none".
+        Use this as your PRIMARY lookup tool — it replaces the
+        get_api → search_help manual cascade.
+
+        Args:
+            query: Identifier or natural-language question.
+            top_k: Maximum results (default 10).
+        """
+        return _smart_lookup.smart_lookup(query=query, top_k=top_k, config=cfg)
 
     @mcp.tool()
     def list_section(
