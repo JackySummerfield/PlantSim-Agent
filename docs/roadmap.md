@@ -64,6 +64,9 @@ Quality-of-life patch addressing the v0.1.0 cold-install pain point (locate `mcp
 
 - [x] **kb-build-guide rewrite** (commit `816c260`) — new `scripts/convert_help_pdf.py` (markitdown + clean + code-tag pipeline); end-to-end procedure from PDF download to verified KB; docling kept as optional high-quality path
 - [x] **Security fix: skills no longer symlinked globally** (commit `028a204`) — skills now live only in the repo and are loaded by the orchestrator via `read_file` from `~/.copilot/plantsim-agent/skills/`. Prevents skill-only invocations that would bypass the orchestrator's mandatory `citation-reviewer` dispatch. **Existing v0.1.0 installs still have stale skill symlinks under `~/.copilot/skills/plantsim-*`; harmless but cleanable with `scripts/uninstall.ps1`.**
+- [x] **`list_section` MCP tool** (commit `dedd552`) — enumerate all entries in the help KB by chapter/kind/query filters. Answers "list all X" questions exhaustively. 10 new tests.
+- [x] **`smart_lookup` MCP tool** (commit `0cdd1c0`) — one-shot cascade (exact API match → suggestion retry → FTS fallback) in a single tool call. Cuts per-question MCP round-trips from 5–10 to 1–2. 10 new tests.
+- [x] **`plantsim-kb-qa` skill rewrite** — cascade simplified from multi-step `get_api` → `search_help` manual LLM-driven loop to single `smart_lookup` call. Added `list_section` for enumeration questions. Credit cost per question drops ~80%.
 
 ---
 
@@ -71,10 +74,7 @@ Quality-of-life patch addressing the v0.1.0 cold-install pain point (locate `mcp
 
 **Theme:** lift retrieval quality, tighten code validation, allow safe modifications.
 
-- [ ] **`list_section(file_path)` MCP tool** — enumerate all `[SimTalk]` sub-entries inside an indexed help file
-  - **Motivation:** v0.1 leaves a coverage gap for "list every API in *chapter X*" questions (e.g. *"What string functions does SimTalk provide?"*). `get_api` needs a name; `search_help` returns ranked snippets, not an exhaustive list. The agent's only recourse today is to bypass MCP and grep the raw markdown, which only works inside VS Code with the repo cloned — breaking the portability guarantee MCP exists to provide.
-  - **Shape:** `list_section(file_path: str, kind: str = "simtalk") → [{entry_name, section, line}]`. Backed by the existing `docs_meta.entry_name` column, no re-indexing required.
-  - **Acceptance:** Agent can answer *"List all string-manipulation functions"* using only MCP tool calls, with a `**Sources:**` block whose link targets are all verifiable against the index.
+- [x] ~~**`list_section(file_path)` MCP tool**~~ ✅ (done in post-v0.1.1, commit `dedd552`)
 - [ ] **Vector retrieval** via the existing `Index` abstraction
   - Candidate stacks: `sentence-transformers` + `sqlite-vec`, or `lancedb`
   - Hybrid mode: BM25 candidates → embedding rerank

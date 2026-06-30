@@ -9,10 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- 日常 push 到 main 的改动写在这里，攒够一个里程碑再打 tag 发 release -->
 
 ### Added
+- `list_section` MCP tool — enumerate help KB entries by chapter/kind/query filters
+- `smart_lookup` MCP tool — one-shot cascade (exact → suggestion → FTS) replaces
+  the multi-call `get_api` → `search_help` pattern. Credit cost ~80% lower.
+- `scripts/convert_help_pdf.py` — all-in-one PDF→markdown conversion (markitdown + clean + code-tag)
 
 ### Changed
+- `plantsim-kb-qa` skill: cascade rewritten to use `smart_lookup` (1–2 calls) instead
+  of manual `get_api` → `search_help` loop (5–10 calls)
+- `install.ps1`: skills no longer symlinked to `~/.copilot/skills/` (security fix —
+  prevents bypassing citation-reviewer by invoking skills directly)
+- `docs/kb-build-guide.md`: rewritten with end-to-end procedure from PDF download to KB
+- Orchestrator agent: skill path updated to `~/.copilot/plantsim-agent/skills/`
 
 ### Fixed
+- Removed broken `/memories/doc-conversion-lessons.md` link from kb-build-guide
 
 ## [0.1.1] - 2026-06-30
 
